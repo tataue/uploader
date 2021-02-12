@@ -21,7 +21,8 @@ interface tempFileData {
 
 const { Dragger } = Upload;
 
-const fileListUrl = './list.php';
+const fileListUrl =
+  'https://run.mocky.io/v3/9ac83236-93ba-49a3-b82f-a8c0a968c002'; //https://run.mocky.io/v3/9ac83236-93ba-49a3-b82f-a8c0a968c002
 const process = (data: string[]): FileData[] => {
   const fileList: FileList[] = [];
   data.forEach((item) => {
@@ -80,6 +81,7 @@ function App() {
       }
       if (status === 'done') {
         // message.success(`${info.file.name} file uploaded successfully.`);
+        console.log('refresh');
         refresh(!needRefresh);
       } else if (status === 'error') {
         message.error(`${info.file.name} file upload failed.`);

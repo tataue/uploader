@@ -1,5 +1,4 @@
 .App {
-  text-align: center;
   padding: 12px 50px;
   margin: 0 auto;
 }
@@ -12,4 +11,11 @@
   border: 1px dashed#683807;
   padding: 25px;
   margin: 50px auto 100px;
+}
+.App .list .ant-list-header .ant-tag {
+  margin-left: 2em;
+}
+.App .list .ant-list-sm .ant-list-item {
+  padding: 4px 16px;
+  white-space: nowrap;
 }
