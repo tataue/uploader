@@ -2,6 +2,9 @@
   padding: 12px 50px;
   margin: 0 auto;
 }
+.App h1 {
+  text-align: center;
+}
 .App .uploader {
   max-width: 1024px;
   margin: 50px auto 100px;

@@ -21,8 +21,7 @@ interface tempFileData {
 
 const { Dragger } = Upload;
 
-const fileListUrl =
-  'https://run.mocky.io/v3/9ac83236-93ba-49a3-b82f-a8c0a968c002'; //https://run.mocky.io/v3/9ac83236-93ba-49a3-b82f-a8c0a968c002
+const fileListUrl = './list.php'; //https://run.mocky.io/v3/9ac83236-93ba-49a3-b82f-a8c0a968c002
 const process = (data: string[]): FileData[] => {
   const fileList: FileList[] = [];
   data.forEach((item) => {
