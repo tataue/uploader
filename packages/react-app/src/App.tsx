@@ -70,7 +70,7 @@ function App() {
   }, [needRefresh]);
 
   const props = {
-    name: 'myFile',
+    name: 'file',
     multiple: true,
     action: './uploader',
     onChange(info: UploadChangeParam) {

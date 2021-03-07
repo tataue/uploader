@@ -31,7 +31,7 @@ export class UploaderController {
     fse.ensureDirSync(UPLOAD_FOLDER);
   }
 
-  async handler(files) {
+  async handlerFiles(files) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       await fse.rename(
@@ -41,28 +41,30 @@ export class UploaderController {
     }
   }
 
+
   @Get()
   async findAll(): Promise<FileList> {
     const files = await readDir(UPLOAD_FOLDER);
     return files;
   }
 
-  // // single file upload
-  // @Post()
-  // @UseInterceptors(FileInterceptor('file'))
-  // // Express.Multer.File
-  // uploadFile(@UploadedFile() file) {
-  //   console.log(file);
-  // }
-
-  // multi file upload
+  // single file upload
   @Post()
-  @UseInterceptors(FilesInterceptor('files', Infinity, { dest: UPLOAD_FOLDER }))
-  async uploadFiles(@Res() res: Response, @UploadedFiles() files) {
-    console.log(files);
-    await this.handler(files);
+  @UseInterceptors(FileInterceptor('file',  {dest: UPLOAD_FOLDER}))
+  // Express.Multer.File
+  async uploadFile(@Res() res: Response, @UploadedFile() file) {
+    console.log(file);
+    await this.handlerFiles([file]  );
     res.json({});
   }
+
+  // multi file upload
+  // @Post()
+  // @UseInterceptors(FilesInterceptor('files', Infinity, { dest: UPLOAD_FOLDER }))
+  // async uploadFiles(@Res() res: Response, @UploadedFiles() files) {
+  //   await this.handlerFiles(files);
+  //   res.json({});
+  // }
 
   // // multi part
   // @Post('upload')
