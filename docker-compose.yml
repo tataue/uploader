@@ -1,0 +1,46 @@
+version: "3.5"
+
+services:
+  nestjs:
+    depends_on:
+      - "mysql"
+    build:
+      context: ./packages/nestjs
+      dockerfile: Dockerfile.dev
+    env_file:
+      - ./packages/nestjs/.env.dev
+    ports:
+      - 3001:3001
+    volumes:
+      - ./packages/nestjs/:/app
+      - /app/node_modules
+    # command: "mysql -hmysql -u root -p lol@12Txt_! -e 'create database test'"
+  
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: lol@12Txt_!
+  
+  phpmyadmin:
+    depends_on:
+      - "mysql"
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: lol@12Txt_!
+    ports:
+      - 3002:80
+
+  react_app:
+    depends_on:
+      - "nestjs"
+    build:
+      context: ./packages/react-app
+      dockerfile: Dockerfile.dev
+    env_file:
+      - ./packages/react-app/.env.dev
+    ports:
+      - 3000:3000
+    volumes:
+      - ./packages/react-app/:/app
+      - /app/node_modules

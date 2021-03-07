@@ -1,5 +1,5 @@
 export default () => ({
-  port: parseInt(process.env.PORT, 10) || 3000,
+  port: parseInt(process.env.NEST_PORT, 10) || 3000,
   mysql: {
     host: process.env.MYSQL_HOST,
     port: parseInt(process.env.MYSQL_PORT, 10) || 5432,
