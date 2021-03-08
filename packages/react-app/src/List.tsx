@@ -54,7 +54,7 @@ export default function FileList(props: {data: FileData[]}) {
               dataSource={item.files}
               renderItem={(file) => (
                 <List.Item>
-                  <a href={`/uploads/${file}`}>{file}</a>
+                  <a href={`/${file}`}>{file}</a>
                 </List.Item>
               )}
             />

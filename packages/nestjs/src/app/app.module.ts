@@ -5,10 +5,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
 import { User } from '../users/user.entity';
 import { UsersModule } from '../users/users.module';
 import { UploaderModule } from '../uploader/uploader.module';
@@ -66,6 +66,17 @@ import configuration from '../config/configuration';
     // HobbyModule,
     // CatsModule,
     UploaderModule,
+    ServeStaticModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        return [
+          {
+            rootPath: configService.get('CLIENT_DIR'),
+          },
+        ];
+      },
+      inject: [ConfigService],
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

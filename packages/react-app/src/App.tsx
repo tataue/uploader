@@ -3,8 +3,6 @@ import Upload from 'antd/es/upload';
 import { UploadChangeParam } from 'antd/es/upload/interface';
 import message from 'antd/es/message';
 
-import Paragraph from 'antd/es/typography/Paragraph';
-
 import { InboxOutlined } from '@ant-design/icons';
 import 'antd/dist/antd.css';
 
@@ -100,9 +98,6 @@ function App() {
         </Dragger>
       </div>
       <List data={fileList} />
-      <Paragraph>
-        还在使用微信文件传输助手？通过容器方式，快速部署可信网络下的文件传输，实现手机笔记本同子网络，文件交换，同时支持可靠的速度传输。
-      </Paragraph>
     </div>
   );
 }

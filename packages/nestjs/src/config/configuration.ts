@@ -1,3 +1,5 @@
+import { join } from 'path';
+
 export default () => ({
   port: parseInt(process.env.NEST_PORT, 10) || 3000,
   mysql: {
@@ -12,4 +14,6 @@ export default () => ({
   mg2: {
     url: process.env.MONGODB_2,
   },
+  CLIENT_DIR: join(__dirname, '..', 'client'),
+  UPLOAD_DIR: join(__dirname, '..', 'client', 'uploader'),
 });

@@ -19,16 +19,20 @@ import {
   FileInterceptor,
   FilesInterceptor,
 } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
+
+import configuration from '../config/configuration';
 
 type FileList = string[];
 
 const readDir = promisify(fs.readdir);
-const UPLOAD_FOLDER = path.resolve(__dirname, './upload_folder');
+// TODO use configService ?
+const UPLOAD_DIR = configuration().UPLOAD_DIR;
 
 @Controller('uploader')
 export class UploaderController {
-  constructor() {
-    fse.ensureDirSync(UPLOAD_FOLDER);
+  constructor(private configService: ConfigService) {
+    fse.ensureDirSync(configService.get('UPLOAD_DIR'));
   }
 
   async handlerFiles(files) {
@@ -41,26 +45,26 @@ export class UploaderController {
     }
   }
 
-
   @Get()
   async findAll(): Promise<FileList> {
-    const files = await readDir(UPLOAD_FOLDER);
+    const files = await readDir(UPLOAD_DIR);
     return files;
   }
 
   // single file upload
   @Post()
-  @UseInterceptors(FileInterceptor('file',  {dest: UPLOAD_FOLDER}))
-  // Express.Multer.File
-  async uploadFile(@Res() res: Response, @UploadedFile() file) {
-    console.log(file);
-    await this.handlerFiles([file]  );
+  @UseInterceptors(FileInterceptor('file', { dest: UPLOAD_DIR }))
+  async uploadFile(
+    @Res() res: Response,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    await this.handlerFiles([file]);
     res.json({});
   }
 
   // multi file upload
   // @Post()
-  // @UseInterceptors(FilesInterceptor('files', Infinity, { dest: UPLOAD_FOLDER }))
+  // @UseInterceptors(FilesInterceptor('files', Infinity, { dest: UPLOAD_DIR }))
   // async uploadFiles(@Res() res: Response, @UploadedFiles() files) {
   //   await this.handlerFiles(files);
   //   res.json({});
