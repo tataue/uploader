@@ -1,10 +1,10 @@
 FROM node:latest AS build
 WORKDIR /app
-COPY ./package.json ./
+COPY ./package.json ./yarn.lock ./
 RUN yarn install --registry https://registry.npm.taobao.org
 COPY . .
 RUN yarn build
-RUN echo "xxd"
+RUN echo "nestapp-front build end"
 
 FROM alpine
 WORKDIR /app

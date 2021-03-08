@@ -15,5 +15,5 @@ export default () => ({
     url: process.env.MONGODB_2,
   },
   CLIENT_DIR: join(__dirname, '..', 'client'),
-  UPLOAD_DIR: join(__dirname, '..', 'client', 'uploader'),
+  UPLOAD_DIR: join(__dirname, '..', 'client', 'uploads'),
 });

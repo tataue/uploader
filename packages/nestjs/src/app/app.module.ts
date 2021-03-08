@@ -22,24 +22,24 @@ import configuration from '../config/configuration';
     ConfigModule.forRoot({
       load: [configuration],
     }),
-    TypeOrmModule.forRootAsync({
-      // https://github.com/nestjsx/nestjs-config/issues/19
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => {
-        return Object.assign(
-          {
-            type: 'mysql', // or mongoose
-            database: 'test',
-            entities: [User],
-            synchronize: true,
-            retryAttempts: 0,
-          },
-          configService.get('mysql'),
-        );
-      },
-      inject: [ConfigService],
-    }),
-    UsersModule,
+    // TypeOrmModule.forRootAsync({
+    //   // https://github.com/nestjsx/nestjs-config/issues/19
+    //   imports: [ConfigModule],
+    //   useFactory: async (configService: ConfigService) => {
+    //     return Object.assign(
+    //       {
+    //         type: 'mysql', // or mongoose
+    //         database: 'test',
+    //         entities: [User],
+    //         synchronize: true,
+    //         retryAttempts: 0,
+    //       },
+    //       configService.get('mysql'),
+    //     );
+    //   },
+    //   inject: [ConfigService],
+    // }),
+    // UsersModule,
     // MongooseModule.forRootAsync({
     //   imports: [ConfigModule],
     //   useFactory: async (configService: ConfigService) => ({
@@ -72,13 +72,26 @@ import configuration from '../config/configuration';
         return [
           {
             rootPath: configService.get('CLIENT_DIR'),
+            serveStaticOptions: {
+              fallthrough: false,
+              index: ['index.html']
+            }
+          },
+          {
+            rootPath: configService.get('UPLOAD_DIR'),
+            // need the `/` prefix
+            serveRoot: '/uploads',
+            serveStaticOptions: {
+              fallthrough: false,
+              index: false,
+            }
           },
         ];
       },
       inject: [ConfigService],
     }),
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [AppService],
 })
 export class AppModule {}
