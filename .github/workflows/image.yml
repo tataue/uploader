@@ -24,6 +24,7 @@ jobs:
       - name: build the front image
         run: |
           cd packages/react-app && \
-          docker buildx  build -f Dockerfile.buildprod \
+          docker buildx  build --push \
+          -f Dockerfile.buildprod \
           --platform=linux/amd64,linux/arm64,linux/arm/v7 \
           -t zyfyy/nestapp-front-build ./
