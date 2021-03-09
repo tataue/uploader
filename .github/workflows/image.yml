@@ -23,9 +23,8 @@ jobs:
         run: echo "${{ secrets.DOCKER_HUB }}" | docker login -u "${{ secrets.DOCKER_HUB_USER }}" --password-stdin
       - name: build the front image
         run: |
-          ls && pwd \
-          cd packages/react-app \
+          ls && pwd && \
           docker buildx  build --push \
-          -f Dockerfile.buildprod \
+          -f ./packages/react-app/Dockerfile.buildprod \
           --platform=linux/amd64,linux/arm64,linux/arm/v7 \
-          -t zyfyy/nestapp-front-build ./
+          -t zyfyy/nestapp-front-build ./packages/react-app
