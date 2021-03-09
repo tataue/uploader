@@ -1,6 +1,6 @@
 FROM nestjs-env:15
 WORKDIR /app
-COPY package.json  yarn.lock ./
+COPY package.json ./
 RUN yarn
 COPY . .
 RUN yarn build
