@@ -1,0 +1,29 @@
+name: build docker prod image
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker Buildx
+        uses: crazy-max/ghaction-docker-buildx@v3.3.1
+      - name: login to docker hub
+        run: echo "${{ secrets.DOCKER_HUB }}" | docker login -u "${{ secrets.DOCKER_HUB_USER }}" --password-stdin
+      - name: build the front image
+        run: |
+          cd packages/react-app && \
+          docker buildx  build -f Dockerfile.buildprod \
+          --platform=linux/amd64,linux/arm64,linux/arm/v7 \
+          -t zyfyy/nestapp-front-build ./
