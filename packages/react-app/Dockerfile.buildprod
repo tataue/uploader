@@ -1,7 +1,7 @@
 FROM node:latest
 WORKDIR /app
 COPY ./package.json ./yarn.lock ./
-RUN yarn install --registry https://registry.npm.taobao.org
+RUN yarn
 COPY . .
 RUN yarn build
 RUN echo "nestapp-front build end"
