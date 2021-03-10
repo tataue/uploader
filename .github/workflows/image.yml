@@ -24,19 +24,19 @@ jobs:
       - name: build the front image
         run: |
           ls && pwd && \
-          docker buildx  build --push \
+          docker buildx build --push \
           -f ./packages/react-app/Dockerfile.buildprod \
           --platform=linux/amd64,linux/arm/v7 \
           -t zyfyy/nestapp-front-build ./packages/react-app
       - name: build the back image
         run: |
           ls && pwd && \
-          docker buildx  build --push \
-          -f ./packages/react-app/Dockerfile.buildprod \
+          docker buildx build --push \
+          -f ./packages/nestjs/Dockerfile.buildprod \
           --platform=linux/amd64,linux/arm/v7 \
-          -t zyfyy/nestapp-front-build ./packages/react-app
+          -t zyfyy/nestapp-back-build ./packages/nestjs
       - name: build the final prod image
         run: |
-          docker buildx  build --push \
+          docker buildx build --push \
           --platform=linux/amd64,linux/arm/v7 \
-          -t zyfyy/nestapp-front-build ./
+          -t zyfyy/nestapp ./
