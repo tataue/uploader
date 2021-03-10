@@ -2,7 +2,6 @@ import React from 'react';
 import List from 'antd/es/list';
 import Tag from 'antd/es/tag';
 
-
 export interface FileData {
   type: string,
   files: string[]
@@ -54,7 +53,7 @@ export default function FileList(props: {data: FileData[]}) {
               dataSource={item.files}
               renderItem={(file) => (
                 <List.Item>
-                  <a href={`./uploads/${file}`}>{file}</a>
+                  <a className="link" href={`./uploads/${file}`}>{file}</a>
                 </List.Item>
               )}
             />

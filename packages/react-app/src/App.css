@@ -18,7 +18,7 @@
 .App .list .ant-list-header .ant-tag {
   margin-left: 2em;
 }
-.App .list .ant-list-sm .ant-list-item {
+.App .list .link {
   padding: 4px 16px;
-  white-space: nowrap;
+  white-space: normal;
 }

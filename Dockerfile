@@ -1,5 +1,5 @@
-FROM nestapp-front-build:latest AS front-build
-FROM nestapp-back-build:latest AS back-build
+FROM zyfyy/nestapp-front-build:latest AS front-build
+FROM zyfyy/nestapp-back-build:latest AS back-build
 
 FROM node:15-slim
 WORKDIR /app
