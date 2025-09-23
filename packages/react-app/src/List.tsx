@@ -1,65 +1,87 @@
-import React from 'react';
-import List from 'antd/es/list';
-import Tag from 'antd/es/tag';
+import React, { useState, useMemo } from 'react';
+import { FileInfo, ViewMode } from './types/FileInfo';
+import { useFileGroups } from './hooks/useFileGroups';
+import EmptyState from './components/EmptyState';
+import FileListHeader from './components/FileListHeader';
+import GroupHeader from './components/GroupHeader';
+import FileTableRow from './components/FileTableRow';
 
-export interface FileData {
-  type: string,
-  files: string[]
-};
+interface FileListProps {
+  files: FileInfo[];
+  onDeleteFile: (filename: string) => Promise<void>;
+}
 
+export default function FileList({ files, onDeleteFile }: FileListProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>('time');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  // Filter files based on search query
+  const filteredFiles = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return files;
+    }
+    return files.filter(file => 
+      file.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [files, searchQuery]);
 
+  const { currentGroups } = useFileGroups(filteredFiles, viewMode);
 
-const genDarkColor = (): string => {
-  const color = Math.random().toString(16).slice(2, 8);
-  let res = [];
-  for (let i = 0; i < color.length; i += 2) {
-    const n = color.split('').splice(i, 2).join('');
-    res.push(parseInt(n, 16));
+  if (files.length === 0) {
+    return <EmptyState />;
   }
-  const [r, g, b] = res;
-  if (r * 0.299 + g * 0.578 + b * 0.114 >= 100) {
-    // 越小颜色越深
-    // console.log('re gen...');
-    return genDarkColor();
-  } else {
-    return color;
-  }
-};
 
-const TagHeader = (props: { tag: string }) => {
-  return <Tag color={`#${genDarkColor()}`}>{props.tag}</Tag>;
-};
-
-export default function FileList(props: {data: FileData[]}) {
-  const data: FileData[] = props.data;
   return (
-    <div className="list">
-      <List
-        grid={{
-          gutter: 64,
-          xs: 1,
-          sm: 2,
-          md: 3,
-          lg: 4,
-          xl: 4,
-          xxl: 6,
-        }}
-        dataSource={data}
-        renderItem={(item) => (
-          <List.Item>
-            <List
-              size="small"
-              header={<TagHeader tag={item.type} />}
-              dataSource={item.files}
-              renderItem={(file) => (
-                <List.Item>
-                  <a className="link" href={`./uploads/${file}`}>{file}</a>
-                </List.Item>
-              )}
-            />
-          </List.Item>
-        )}
+    <div className="space-y-4">
+      <FileListHeader
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        fileCount={filteredFiles.length}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
+
+      {/* Show message when search returns no results */}
+      {searchQuery.trim() && filteredFiles.length === 0 && (
+        <div className="enterprise-card p-8 text-center">
+          <p className="text-slate-500">未找到匹配 "{searchQuery}" 的文件</p>
+        </div>
+      )}
+
+      {currentGroups.map((group, index) => (
+        <div key={index} className="enterprise-card overflow-hidden">
+          <GroupHeader group={group} />
+          
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-4 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    文件名
+                  </th>
+                  <th className="text-left py-4 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider hidden md:table-cell">
+                    上传时间
+                  </th>
+                  <th className="text-right py-4 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider hidden md:table-cell">
+                    文件大小
+                  </th>
+                  <th className="text-left py-4 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider hidden lg:table-cell">
+                    类型
+                  </th>
+                  <th className="text-right py-4 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    操作
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.files.map((file, fileIndex) => (
+                  <FileTableRow key={fileIndex} file={file} onDeleteFile={onDeleteFile} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -24,17 +24,28 @@
     "@nestjs/common": "^11.1.6",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.6",
+    "@nestjs/graphql": "^13.1.0",
+    "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/platform-fastify": "^11.1.6",
     "@nestjs/serve-static": "^5.0.3",
+    "@nestjs/typeorm": "^11.0.0",
     "@types/fs-extra": "^11.0.4",
-
+    "apollo-server-express": "^3.13.0",
+    "apollo-server-fastify": "^3.13.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
     "fs-extra": "^11.3.2",
-
+    "graphql": "^16.11.0",
+    "graphql-tools": "^9.0.20",
+    "mongoose": "^8.18.1",
     "multer": "^2.0.2",
-
+    "mysql2": "^3.15.0",
+    "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "rimraf": "^6.0.1",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.3.26"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.10",

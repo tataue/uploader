@@ -7,20 +7,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { User } from '../users/user.entity';
-import { UsersModule } from '../users/users.module';
 import { UploaderModule } from '../uploader/uploader.module';
-import { CatsModule } from '../cats/cats.module';
-import { PersonModule } from 'src/person/person.module';
-import { HobbyModule } from 'src/hobby/hobby.module';
 import configuration from '../config/configuration';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       load: [configuration],
+      isGlobal: true,
     }),
     // TypeOrmModule.forRootAsync({
     //   // https://github.com/nestjsx/nestjs-config/issues/19
@@ -67,7 +61,7 @@ import configuration from '../config/configuration';
     // CatsModule,
     UploaderModule,
     ServeStaticModule.forRootAsync({
-      imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         return [
           {
@@ -88,10 +82,9 @@ import configuration from '../config/configuration';
           },
         ];
       },
-      inject: [ConfigService],
     }),
   ],
   controllers: [],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}
