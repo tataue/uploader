@@ -7,7 +7,7 @@
     "install:all": "pnpm install",
     "build": "pnpm -r build",
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
-    "start": "pnpm --filter nestjs run start:prod",
+    "start": "pnpm -r start",
     "lint": "pnpm run lint:backend && pnpm run lint:frontend",
     "clean": "rimraf packages/*/dist packages/*/build packages/*/node_modules node_modules"
   },

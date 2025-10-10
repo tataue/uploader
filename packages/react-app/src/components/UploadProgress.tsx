@@ -1,5 +1,4 @@
 import React from 'react';
-import { Progress } from '@nextui-org/react';
 
 interface FileUploadProgress {
   fileName: string;
@@ -13,54 +12,63 @@ interface UploadProgressProps {
   overallProgress: number;
 }
 
+const clampProgress = (value: number): number => {
+  if (Number.isNaN(value)) {
+    return 0;
+  }
+  return Math.min(100, Math.max(0, value));
+};
+
 const UploadProgress: React.FC<UploadProgressProps> = ({
   uploading,
   uploadProgress,
-  overallProgress
+  overallProgress,
 }) => {
   if (!uploading && uploadProgress.length === 0) {
     return null;
   }
 
+  const overall = clampProgress(overallProgress);
+
   return (
-    <div className="mt-6 space-y-3">
+    <div className="w-full space-y-4">
       <div>
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-slate-700">整体进度</span>
-          <span className="text-sm text-slate-500">{overallProgress}%</span>
+        <div className="mb-2 flex items-center justify-between text-xs text-slate-600">
+          <span>整体进度</span>
+          <span>{overall}%</span>
         </div>
-        <Progress 
-          value={overallProgress} 
-          color="primary" 
-          size="sm"
-          className="max-w-full"
-        />
+        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+          <div
+            className="h-full rounded-full bg-blue-500 transition-all duration-200"
+            style={{ width: `${overall}%` }}
+          />
+        </div>
       </div>
-      
-      {uploadProgress.length > 1 && (
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-slate-700">文件详情</div>
-          <div className="max-h-32 overflow-y-auto space-y-2">
-            {uploadProgress.map((file, index) => (
-              <div key={index} className="text-xs">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-600 truncate max-w-[200px]" title={file.fileName}>
+
+      {uploadProgress.length > 0 && (
+        <ul className="max-h-36 space-y-2 overflow-y-auto text-xs text-slate-600">
+          {uploadProgress.map((file, index) => {
+            const value = clampProgress(file.progress);
+            return (
+              <li key={`${file.fileName}-${index}`} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="max-w-[200px] truncate" title={file.fileName}>
                     {file.fileName}
                   </span>
-                  <span className="text-slate-500 ml-2">
-                    {file.completed ? '✓' : `${file.progress}%`}
+                  <span className={file.completed ? 'text-emerald-600' : 'text-slate-500'}>
+                    {file.completed ? '完成' : `${value}%`}
                   </span>
                 </div>
-                <Progress 
-                  value={file.progress} 
-                  color={file.completed ? "success" : "primary"} 
-                  size="sm"
-                  className="max-w-full"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className={`${file.completed ? 'bg-emerald-500' : 'bg-blue-500'} h-full rounded-full transition-all duration-200`}
+                    style={{ width: `${value}%` }}
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
