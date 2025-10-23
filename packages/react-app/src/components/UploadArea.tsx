@@ -1,15 +1,17 @@
 import React, { useRef } from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, Folder } from 'lucide-react';
 
 import { useFileUpload } from '../hooks/useFileUpload';
 import UploadProgress from './UploadProgress';
 
 interface UploadAreaProps {
   onUploadSuccess: () => void;
+  currentPath?: string;
 }
 
-const UploadArea: React.FC<UploadAreaProps> = ({ onUploadSuccess }) => {
+const UploadArea: React.FC<UploadAreaProps> = ({ onUploadSuccess, currentPath = '' }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const {
     dragActive,
     uploading,
@@ -18,18 +20,28 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onUploadSuccess }) => {
     handleDrag,
     handleDrop,
     handleChange,
-  } = useFileUpload(onUploadSuccess);
+  } = useFileUpload(onUploadSuccess, currentPath);
 
   const triggerFileDialog = (): void => {
-    fileInputRef.current?.click();
+    if (fileInputRef.current) {
+      (fileInputRef.current as HTMLInputElement & { webkitdirectory: boolean }).webkitdirectory = false;
+      fileInputRef.current.click();
+    }
+  };
+
+  const triggerFolderDialog = (): void => {
+    if (folderInputRef.current) {
+      (folderInputRef.current as HTMLInputElement & { webkitdirectory: boolean }).webkitdirectory = true;
+      folderInputRef.current.click();
+    }
   };
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <header className="mb-4">
+      <div className="mb-4">
         <h2 className="text-lg font-semibold text-slate-900">文件上传</h2>
-        <p className="text-sm text-slate-500">拖拽文件到下方区域或点击按钮选择文件</p>
-      </header>
+        <p className="text-xs text-slate-500 mt-1">当前目录: <code className="bg-slate-100 px-2 py-1 rounded text-slate-700">/{currentPath || ''}</code></p>
+      </div>
 
       <div
         className={`relative flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed p-8 text-center transition-colors duration-200 ${
@@ -45,7 +57,15 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onUploadSuccess }) => {
           type="file"
           multiple
           onChange={handleChange}
-          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          className="hidden"
+          disabled={uploading}
+        />
+        <input
+          ref={folderInputRef}
+          type="file"
+          multiple
+          onChange={handleChange}
+          className="hidden"
           disabled={uploading}
         />
 
@@ -55,19 +75,30 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onUploadSuccess }) => {
 
         <div>
           <p className="text-base font-medium text-slate-900">
-            {dragActive ? '释放文件开始上传' : '拖拽文件到此处'}
+            {dragActive ? '释放开始上传' : '拖拽文件或文件夹'}
           </p>
-          <p className="mt-1 text-sm text-slate-500">支持一次选择多个文件</p>
+          <p className="mt-1 text-sm text-slate-500">支持多个文件及目录结构</p>
         </div>
 
-        <button
-          type="button"
-          onClick={triggerFileDialog}
-          disabled={uploading}
-          className="rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-80"
-        >
-          {uploading ? '上传中...' : '选择文件'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={triggerFileDialog}
+            disabled={uploading}
+            className="rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-80"
+          >
+            {uploading ? '上传中...' : '选择文件'}
+          </button>
+          <button
+            type="button"
+            onClick={triggerFolderDialog}
+            disabled={uploading}
+            className="rounded-md bg-green-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-80 flex items-center gap-2"
+          >
+            <Folder className="h-4 w-4" />
+            {uploading ? '上传中...' : '选择文件夹'}
+          </button>
+        </div>
 
         <UploadProgress
           uploading={uploading}
