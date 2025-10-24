@@ -224,8 +224,16 @@ export class UploaderController {
   //   console.log(files);
   // }
 
-  @Delete(':filePath(*)')
-  async deleteFile(@Param('filePath') filePath: string, @Res() res: Response) {
+  private normalizeFilePath(filePath: string | string[]): string {
+    if (Array.isArray(filePath)) {
+      return filePath.join('/');
+    }
+    return filePath ?? '';
+  }
+
+  @Delete(':filePath')
+  async deleteFile(@Param('filePath') filePathParam: string | string[], @Res() res: Response) {
+    const filePath = this.normalizeFilePath(filePathParam);
     try {
       console.log(`[deleteFile] filePath=${filePath}`);
       
@@ -259,8 +267,9 @@ export class UploaderController {
     }
   }
 
-  @Post('download/:filePath(*)')
-  async downloadFile(@Param('filePath') filePath: string, @Res() res: Response) {
+  @Post('download/:filePath')
+  async downloadFile(@Param('filePath') filePathParam: string | string[], @Res() res: Response) {
+    const filePath = this.normalizeFilePath(filePathParam);
     try {
       console.log(`[downloadFile] filePath=${filePath}`);
       

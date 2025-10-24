@@ -22,9 +22,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ item, onDelete, onDownload, onNavig
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`确定删除 ${item.name} 吗？`)) {
-      onDelete(item.path || item.name);
-    }
+    if (confirm(`确定删除 ${item.name} 吗？`)) onDelete(item.path || item.name);
   };
 
   const handleDownload = (e: React.MouseEvent) => {
@@ -37,44 +35,52 @@ const TreeNode: React.FC<TreeNodeProps> = ({ item, onDelete, onDownload, onNavig
     onNavigateToDir?.(item.path || item.name);
   };
 
-  const paddingLeft = level * 20;
+  const indentStyle = { paddingLeft: `${level * 1.25}rem` };
 
   if (item.isDir) {
     return (
-      <div className="border-l border-slate-200">
-        <div
-          className="flex items-center gap-2 py-2 px-3 hover:bg-blue-50 transition-colors bg-slate-50 group"
-          style={{ paddingLeft: `${paddingLeft}px` }}
-        >
+      <div className="rounded-lg bg-white/70 p-2 transition hover:shadow-soft" style={indentStyle}>
+        <div className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-brand-50">
           <button
-            className="flex-shrink-0 w-5 flex justify-center hover:text-blue-600"
+            className="flex h-6 w-6 items-center justify-center rounded-md border border-transparent text-neutral-400 transition hover:border-brand-200 hover:text-brand-500"
             onClick={(e) => {
               e.stopPropagation();
               setExpanded(!expanded);
             }}
+            aria-label={expanded ? '折叠目录' : '展开目录'}
+            title={expanded ? '折叠' : '展开'}
           >
             {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </button>
-          <Folder size={16} className="text-blue-500 flex-shrink-0" />
-          <span className="flex-1 text-sm font-medium text-slate-900 cursor-pointer group-hover:underline" onClick={handleNavigate}>
+          <Folder size={18} className="text-brand-500" />
+          <span
+            className="flex-1 cursor-pointer text-sm font-medium text-neutral-900 hover:text-brand-600"
+            onClick={handleNavigate}
+          >
             {item.name}
           </span>
           <button
             onClick={handleNavigate}
-            className="p-1.5 hover:bg-green-100 rounded transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+            className="btn-ghost h-8 w-8 rounded-full bg-white/80 p-1 text-accent-600 hover:bg-accent-50"
             title="进入目录"
+            aria-label="进入目录"
           >
-            <LogIn size={14} className="text-green-600" />
+            <LogIn size={14} />
           </button>
-          <button onClick={handleDelete} className="p-1.5 hover:bg-red-100 rounded transition-colors flex-shrink-0">
-            <Trash2 size={14} className="text-red-600" />
+          <button
+            onClick={handleDelete}
+            className="btn-ghost h-8 w-8 rounded-full bg-white/80 p-1 text-danger hover:bg-danger/10"
+            title="删除目录"
+            aria-label="删除目录"
+          >
+            <Trash2 size={14} />
           </button>
         </div>
         {expanded && item.children && item.children.length > 0 && (
-          <div className="bg-white">
+          <div className="mt-1 space-y-1">
             {item.children.map((child) => (
               <TreeNode
-                key={child.path}
+                key={child.path || child.name}
                 item={child}
                 onDelete={onDelete}
                 onDownload={onDownload}
@@ -90,18 +96,31 @@ const TreeNode: React.FC<TreeNodeProps> = ({ item, onDelete, onDownload, onNavig
 
   return (
     <div
-      className="flex items-center gap-2 py-2 px-3 hover:bg-slate-100 transition-colors border-l border-slate-200"
-      style={{ paddingLeft: `${paddingLeft}px` }}
+      className="flex items-center gap-2 rounded-lg bg-white/60 px-4 py-2 text-sm text-neutral-700 transition hover:bg-white hover:shadow-soft"
+      style={indentStyle}
     >
-      <div className="flex-shrink-0 w-5" />
-      <File size={16} className="text-slate-400 flex-shrink-0" />
-      <span className="flex-1 text-sm text-slate-700">{item.name}</span>
-      <span className="text-xs text-slate-500 flex-shrink-0">{(item.size / 1024).toFixed(1)} KB</span>
-      <button onClick={handleDownload} className="p-1.5 hover:bg-blue-100 rounded transition-colors flex-shrink-0">
-        <Download size={14} className="text-blue-600" />
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100 text-neutral-400">
+        <File size={16} />
+      </div>
+      <span className="flex-1 truncate" title={item.name}>
+        {item.name}
+      </span>
+      <span className="badge bg-neutral-100 text-neutral-500">{(item.size / 1024).toFixed(1)} KB</span>
+      <button
+        onClick={handleDownload}
+        className="btn-ghost h-8 w-8 rounded-full bg-white/80 p-1 text-brand-500 hover:bg-brand-50"
+        title="下载文件"
+        aria-label="下载文件"
+      >
+        <Download size={14} />
       </button>
-      <button onClick={handleDelete} className="p-1.5 hover:bg-red-100 rounded transition-colors flex-shrink-0">
-        <Trash2 size={14} className="text-red-600" />
+      <button
+        onClick={handleDelete}
+        className="btn-ghost h-8 w-8 rounded-full bg-white/80 p-1 text-danger hover:bg-danger/10"
+        title="删除文件"
+        aria-label="删除文件"
+      >
+        <Trash2 size={14} />
       </button>
     </div>
   );
@@ -110,14 +129,14 @@ const TreeNode: React.FC<TreeNodeProps> = ({ item, onDelete, onDownload, onNavig
 const DirectoryTree: React.FC<DirectoryTreeProps> = ({ items, onDelete, onDownload, onNavigateToDir }) => {
   if (items.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12 text-slate-500">
+      <div className="flex items-center justify-center rounded-xl border border-dashed border-neutral-200/70 bg-white/80 py-10 text-neutral-500">
         <p>暂无文件</p>
       </div>
     );
   }
 
   return (
-    <div className="border border-slate-200 rounded-md overflow-hidden divide-y divide-slate-100">
+    <div className="space-y-1">
       {items.map((item) => (
         <TreeNode
           key={item.path || item.name}
