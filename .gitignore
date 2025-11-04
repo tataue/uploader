@@ -1,3 +1,4 @@
 .log
 uploader.tar
 packages/nestjs/client/uploads/**
+/.worktrees/
