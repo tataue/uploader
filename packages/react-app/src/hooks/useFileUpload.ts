@@ -23,6 +23,14 @@ export const useFileUpload = (onSuccess: () => void, currentPath: string = '') =
     };
   }, []);
 
+  useEffect(() => {
+    if (uploadProgress.length > 0) {
+      const totalProgress = uploadProgress.reduce((sum, item) => sum + item.progress, 0);
+      const overall = Math.round(totalProgress / uploadProgress.length);
+      setOverallProgress(overall);
+    }
+  }, [uploadProgress]);
+
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -81,15 +89,11 @@ export const useFileUpload = (onSuccess: () => void, currentPath: string = '') =
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable && isMountedRef.current) {
           const progress = Math.round((e.loaded / e.total) * 100);
-          setUploadProgress(prev => {
-            const updated = prev.map((item, i) => 
+          setUploadProgress(prev => 
+            prev.map((item, i) => 
               i === index ? { ...item, progress } : item
-            );
-            const totalProgress = updated.reduce((sum, item) => sum + item.progress, 0);
-            const overall = Math.round(totalProgress / updated.length);
-            setOverallProgress(overall);
-            return updated;
-          });
+            )
+          );
         }
       });
       
@@ -101,15 +105,11 @@ export const useFileUpload = (onSuccess: () => void, currentPath: string = '') =
         }
         
         if (xhr.status >= 200 && xhr.status < 300) {
-          setUploadProgress(prev => {
-            const updated = prev.map((item, i) => 
+          setUploadProgress(prev => 
+            prev.map((item, i) => 
               i === index ? { ...item, progress: 100, completed: true } : item
-            );
-            const totalProgress = updated.reduce((sum, item) => sum + item.progress, 0);
-            const overall = Math.round(totalProgress / updated.length);
-            setOverallProgress(overall);
-            return updated;
-          });
+            )
+          );
           resolve(true);
         } else {
           console.error(`${file.name} 上传失败: ${xhr.status} ${xhr.statusText}`);

@@ -32,7 +32,7 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
   }
 
   const overall = clampProgress(overallProgress);
-  const completedCount = uploadProgress.filter(f => f.completed).length;
+  const completedCount = uploadProgress.filter(f => f.completed || f.progress >= 100).length;
 
   return (
     <div className="w-full space-y-3">
@@ -55,19 +55,20 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
         <ul className="scrollbar-slim max-h-96 space-y-2 overflow-y-auto rounded-lg bg-white/60 p-3 text-xs text-neutral-600 shadow-inner">
           {uploadProgress.map((file, index) => {
             const value = clampProgress(file.progress);
+            const isCompleted = file.completed || file.progress >= 100;
             return (
               <li key={`${file.fileName}-${index}`} className="space-y-1.5 rounded-md border border-transparent bg-white/70 p-2.5 shadow-soft transition hover:border-brand-200/80">
                 <div className="flex items-center justify-between gap-2">
                   <span className="max-w-[70%] truncate font-medium text-neutral-700" title={file.fileName}>
                     {file.fileName}
                   </span>
-                  <span className={file.completed ? 'text-success' : 'text-brand-500'}>
-                    {file.completed ? '完成' : `${value}%`}
+                  <span className={isCompleted ? 'text-success' : 'text-brand-500'}>
+                    {isCompleted ? '完成' : `${value}%`}
                   </span>
                 </div>
                 <div className="h-1 w-full overflow-hidden rounded-full bg-neutral-200/80">
                   <div
-                    className={`${file.completed ? 'bg-success' : 'bg-brand-500'} h-full rounded-full transition-all duration-200`}
+                    className={`${isCompleted ? 'bg-success' : 'bg-brand-500'} h-full rounded-full transition-all duration-200`}
                     style={{ width: `${value}%` }}
                   />
                 </div>
