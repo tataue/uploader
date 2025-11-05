@@ -45,13 +45,16 @@ const readDir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 // TODO use configService ?
 const UPLOAD_DIR = configuration().UPLOAD_DIR;
+const TEMP_FOLDER_NAME = '.tmp';
+const TEMP_DIR = path.join(UPLOAD_DIR, TEMP_FOLDER_NAME);
 
 async function buildFileTree(dir: string, basePath: string = ''): Promise<FileInfo[]> {
   const items: FileInfo[] = [];
   const files = await readDir(dir);
 
   for (const fileName of files) {
-    if (fileName === '.' || fileName === '..') continue;
+    // 排除系统目录和临时上传目录
+    if (fileName === '.' || fileName === '..' || fileName === TEMP_FOLDER_NAME) continue;
 
     const filePath = path.join(dir, fileName);
     const relativePath = basePath ? path.join(basePath, fileName) : fileName;
@@ -98,11 +101,27 @@ async function buildFileTree(dir: string, basePath: string = ''): Promise<FileIn
 export class UploaderController {
   constructor(private configService: ConfigService) {
     fse.ensureDirSync(configService.get('UPLOAD_DIR'));
+    fse.ensureDirSync(TEMP_DIR);
+  }
+
+  private validatePathSegment(segment: string): void {
+    if (!segment || segment.includes('..') || segment.includes('\0')) {
+      throw new HttpException('无效的路径', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  private sanitizeFilePath(filePath: string): string {
+    // 移除路径遍历字符和空字节
+    const sanitized = filePath.replace(/\.\./g, '').replace(/\0/g, '');
+    // 规范化路径分隔符
+    return sanitized.split(/[/\\]+/).filter(Boolean).join('/');
   }
 
   async handlerFiles(files, body: any) {
     console.log(`[handlerFiles] files count=${files.length}, body keys=${Object.keys(body || {}).join(',')}`);
     console.log(`[handlerFiles] relativePath=${JSON.stringify(body?.relativePath)}, targetDir=${JSON.stringify(body?.targetDir)}`);
+    
+    const resolvedUploadDir = path.resolve(UPLOAD_DIR);
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -130,25 +149,39 @@ export class UploaderController {
       
       if (relPath) {
         // 目录上传：relativePath 包含完整路径（包括文件名）
-        targetPath = path.resolve(UPLOAD_DIR, relPath);
-        console.log(`[handlerFiles] using relativePath: ${relPath} -> ${targetPath}`);
+        const sanitizedRelPath = this.sanitizeFilePath(relPath);
+        this.validatePathSegment(sanitizedRelPath);
+        targetPath = path.resolve(UPLOAD_DIR, sanitizedRelPath);
+        console.log(`[handlerFiles] using relativePath: ${relPath} -> ${sanitizedRelPath} -> ${targetPath}`);
       } else if (targetDir) {
         // 单文件上传到指定目录
-        targetPath = path.resolve(UPLOAD_DIR, targetDir, originalName);
-        console.log(`[handlerFiles] using targetDir: ${targetDir} + ${originalName} -> ${targetPath}`);
+        const sanitizedTargetDir = this.sanitizeFilePath(targetDir);
+        const sanitizedFileName = path.basename(originalName);
+        this.validatePathSegment(sanitizedTargetDir);
+        this.validatePathSegment(sanitizedFileName);
+        targetPath = path.resolve(UPLOAD_DIR, sanitizedTargetDir, sanitizedFileName);
+        console.log(`[handlerFiles] using targetDir: ${targetDir} + ${originalName} -> ${sanitizedTargetDir} + ${sanitizedFileName} -> ${targetPath}`);
       } else {
         // 上传到根目录
-        targetPath = path.resolve(UPLOAD_DIR, originalName);
-        console.log(`[handlerFiles] root upload: ${originalName} -> ${targetPath}`);
+        const sanitizedFileName = path.basename(originalName);
+        this.validatePathSegment(sanitizedFileName);
+        targetPath = path.resolve(UPLOAD_DIR, sanitizedFileName);
+        console.log(`[handlerFiles] root upload: ${originalName} -> ${sanitizedFileName} -> ${targetPath}`);
       }
       
-      const targetDir_dir = path.dirname(targetPath);
+      // 安全检查：确保路径在上传目录内
+      const normalizedTargetPath = path.normalize(targetPath);
+      if (!normalizedTargetPath.startsWith(resolvedUploadDir + path.sep) && normalizedTargetPath !== resolvedUploadDir) {
+        throw new HttpException('无效的文件路径', HttpStatus.BAD_REQUEST);
+      }
+      
+      const targetDir_dir = path.dirname(normalizedTargetPath);
       await fse.ensureDir(targetDir_dir);
       
       const sourceFile = path.resolve(file.destination, file.filename);
-      console.log(`[handlerFiles] renaming: ${sourceFile} -> ${targetPath}`);
+      console.log(`[handlerFiles] renaming: ${sourceFile} -> ${normalizedTargetPath}`);
       
-      await fse.rename(sourceFile, targetPath);
+      await fse.rename(sourceFile, normalizedTargetPath);
       console.log(`[handlerFiles] file ${i} moved successfully`);
     }
   }
@@ -164,7 +197,7 @@ export class UploaderController {
   }
 
   @Post()
-  @UseInterceptors(AnyFilesInterceptor({ dest: UPLOAD_DIR }))
+  @UseInterceptors(AnyFilesInterceptor({ dest: TEMP_DIR }))
   async uploadFile(
     @Req() req: Request,
     @Res() res: Response,
@@ -225,10 +258,22 @@ export class UploaderController {
   // }
 
   private normalizeFilePath(filePath: string | string[]): string {
+    let normalizedPath: string;
+    
     if (Array.isArray(filePath)) {
-      return filePath.join('/');
+      // 验证每个路径段
+      for (const segment of filePath) {
+        if (segment.includes('..') || segment.includes('\0')) {
+          throw new HttpException('无效的路径', HttpStatus.BAD_REQUEST);
+        }
+      }
+      normalizedPath = filePath.join('/');
+    } else {
+      normalizedPath = filePath ?? '';
     }
-    return filePath ?? '';
+    
+    // 清理路径遍历字符
+    return this.sanitizeFilePath(normalizedPath);
   }
 
   @Delete(':filePath')
@@ -238,22 +283,23 @@ export class UploaderController {
       console.log(`[deleteFile] filePath=${filePath}`);
       
       const fullPath = path.resolve(UPLOAD_DIR, filePath);
+      const normalizedFullPath = path.normalize(fullPath);
       
-      console.log(`[deleteFile] fullPath=${fullPath}, exists=${fs.existsSync(fullPath)}`);
-      
-      // 检查文件/文件夹是否存在
-      if (!fs.existsSync(fullPath)) {
-        throw new HttpException('文件或文件夹不存在', HttpStatus.NOT_FOUND);
-      }
+      console.log(`[deleteFile] fullPath=${normalizedFullPath}, exists=${fs.existsSync(normalizedFullPath)}`);
       
       // 安全检查：确保路径在上传目录内
       const resolvedUploadDir = path.resolve(UPLOAD_DIR);
-      if (!fullPath.startsWith(resolvedUploadDir)) {
+      if (!normalizedFullPath.startsWith(resolvedUploadDir + path.sep) && normalizedFullPath !== resolvedUploadDir) {
         throw new HttpException('无效的文件路径', HttpStatus.BAD_REQUEST);
       }
       
+      // 检查文件/文件夹是否存在
+      if (!fs.existsSync(normalizedFullPath)) {
+        throw new HttpException('文件或文件夹不存在', HttpStatus.NOT_FOUND);
+      }
+      
       // 删除文件或文件夹
-      await fse.remove(fullPath);
+      await fse.remove(normalizedFullPath);
       
       console.log(`[deleteFile] deleted successfully`);
       
@@ -274,27 +320,28 @@ export class UploaderController {
       console.log(`[downloadFile] filePath=${filePath}`);
       
       const fullPath = path.resolve(UPLOAD_DIR, filePath);
+      const normalizedFullPath = path.normalize(fullPath);
       
       // 安全检查
       const resolvedUploadDir = path.resolve(UPLOAD_DIR);
-      if (!fullPath.startsWith(resolvedUploadDir)) {
+      if (!normalizedFullPath.startsWith(resolvedUploadDir + path.sep) && normalizedFullPath !== resolvedUploadDir) {
         throw new HttpException('无效的文件路径', HttpStatus.BAD_REQUEST);
       }
       
-      if (!fs.existsSync(fullPath)) {
+      if (!fs.existsSync(normalizedFullPath)) {
         throw new HttpException('文件或文件夹不存在', HttpStatus.NOT_FOUND);
       }
       
-      const stats = await fse.stat(fullPath);
+      const stats = await fse.stat(normalizedFullPath);
       
       if (stats.isFile()) {
         // 单文件直接返回
-        console.log(`[downloadFile] downloading file: ${fullPath}`);
-        res.download(fullPath);
+        console.log(`[downloadFile] downloading file: ${normalizedFullPath}`);
+        res.download(normalizedFullPath);
       } else {
         // 目录压缩下载
-        const fileName = path.basename(fullPath);
-        console.log(`[downloadFile] zipping directory: ${fullPath}`);
+        const fileName = path.basename(normalizedFullPath);
+        console.log(`[downloadFile] zipping directory: ${normalizedFullPath}`);
         res.setHeader('Content-Type', 'application/zip');
         res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName)}.zip"`);
         
@@ -340,7 +387,7 @@ export class UploaderController {
         });
         
         archive.pipe(res);
-        archive.directory(fullPath, false);
+        archive.directory(normalizedFullPath, false);
         await archive.finalize();
       }
     } catch (error) {

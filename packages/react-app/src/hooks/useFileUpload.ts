@@ -13,7 +13,6 @@ export const useFileUpload = (onSuccess: () => void, currentPath: string = '') =
   const [overallProgress, setOverallProgress] = useState(0);
   const activeXHRs = useRef<XMLHttpRequest[]>([]);
   const isMountedRef = useRef(true);
-  const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -21,10 +20,6 @@ export const useFileUpload = (onSuccess: () => void, currentPath: string = '') =
       isMountedRef.current = false;
       activeXHRs.current.forEach(xhr => xhr.abort());
       activeXHRs.current = [];
-      if (timeoutRef.current !== null) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
     };
   }, []);
 
@@ -164,17 +159,11 @@ export const useFileUpload = (onSuccess: () => void, currentPath: string = '') =
     }
     
     setUploading(false);
-    
-    if (timeoutRef.current !== null) {
-      clearTimeout(timeoutRef.current);
-    }
-    
-    timeoutRef.current = window.setTimeout(() => {
-      if (isMountedRef.current) {
-        setUploadProgress([]);
-        setOverallProgress(0);
-      }
-    }, 2000);
+  };
+
+  const clearProgress = () => {
+    setUploadProgress([]);
+    setOverallProgress(0);
   };
 
   return {
@@ -184,6 +173,7 @@ export const useFileUpload = (onSuccess: () => void, currentPath: string = '') =
     overallProgress,
     handleDrag,
     handleDrop,
-    handleChange
+    handleChange,
+    clearProgress
   };
 };
