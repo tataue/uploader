@@ -4,6 +4,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import configuration from './config/configuration';
 import { UploaderModule } from './modules/uploader/uploader.module';
+import { HealthModule } from './modules/health/health.module';
 import { HttpLoggerMiddleware } from './common/middleware';
 
 @Module({
@@ -23,6 +24,7 @@ import { HttpLoggerMiddleware } from './common/middleware';
       },
     ),
     UploaderModule,
+    HealthModule,
   ],
 })
 export class AppModule implements NestModule {
