@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import UploadArea from './components/UploadArea';
-import { useFileList } from './hooks/useFileList';
-import List from './List';
+import UploadArea from './features/uploader/components/UploadArea';
+import { useFileList } from './features/uploader/hooks/useFileList';
+import FileList from './features/uploader/components/FileList';
 
 function App() {
   const { fileList, refreshFileList } = useFileList();
@@ -39,7 +39,7 @@ function App() {
 
         <div className="flex flex-col gap-8 xl:grid xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)] xl:items-start xl:gap-10">
           <UploadArea onUploadSuccess={refreshFileList} currentPath={currentPath} />
-          <List
+          <FileList
             files={fileList}
             onDeleteFile={handleDeleteFile}
             currentPath={currentPath}

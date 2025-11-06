@@ -11,49 +11,6 @@ import configuration from '../config/configuration';
       load: [configuration],
       isGlobal: true,
     }),
-    // TypeOrmModule.forRootAsync({
-    //   // https://github.com/nestjsx/nestjs-config/issues/19
-    //   imports: [ConfigModule],
-    //   useFactory: async (configService: ConfigService) => {
-    //     return Object.assign(
-    //       {
-    //         type: 'mysql', // or mongoose
-    //         database: 'test',
-    //         entities: [User],
-    //         synchronize: true,
-    //         retryAttempts: 0,
-    //       },
-    //       configService.get('mysql'),
-    //     );
-    //   },
-    //   inject: [ConfigService],
-    // }),
-    // UsersModule,
-    // MongooseModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: async (configService: ConfigService) => ({
-    //     uri: configService.get('mg1').url,
-    //   }),
-    //   inject: [ConfigService],
-    //   connectionName: 'cats',
-    // }),
-    // MongooseModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: async (configService: ConfigService) => ({
-    //     uri: configService.get('mg2').url,
-    //   }),
-    //   inject: [ConfigService],
-    //   connectionName: 'gql',
-    // }),
-    // GraphQLModule.forRoot({
-    //   autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
-    //   sortSchema: true,
-    //   playground: true,
-    //   debug: false,
-    // }),
-    // PersonModule,
-    // HobbyModule,
-    // CatsModule,
     UploaderModule,
     ServeStaticModule.forRootAsync({
       inject: [ConfigService],
@@ -68,7 +25,6 @@ import configuration from '../config/configuration';
           },
           {
             rootPath: configService.get('UPLOAD_DIR'),
-            // need the `/` prefix
             serveRoot: '/uploads',
             serveStaticOptions: {
               fallthrough: false,

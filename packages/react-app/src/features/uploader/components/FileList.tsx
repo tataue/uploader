@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, Search } from 'lucide-react';
-import EmptyState from './components/EmptyState';
-import DirectoryTree from './components/DirectoryTree';
-import { FileInfo } from './types/FileInfo';
+import EmptyState from './EmptyState';
+import DirectoryTree from './DirectoryTree';
+import { FileInfo } from '../types/FileInfo';
 
 interface FileListProps {
   files: FileInfo[];

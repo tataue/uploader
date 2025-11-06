@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
-import { UploaderController } from './uploader.controller';
+import { UploaderController } from './controllers/uploader.controller';
 import { UploaderService, FileSystemService, PathSecurityService } from './services';
 import * as path from 'path';
 

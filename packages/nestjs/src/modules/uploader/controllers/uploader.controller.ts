@@ -16,8 +16,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
-import { UploaderService, PathSecurityService, FileSystemService } from './services';
-import { FileInfoDto } from './dto';
+import { UploaderService, PathSecurityService, FileSystemService } from '../services';
+import { FileInfoDto } from '../dto';
 
 @Controller('uploader')
 export class UploaderController {
