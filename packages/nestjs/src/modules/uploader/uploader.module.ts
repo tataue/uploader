@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UploaderController } from './controllers/uploader.controller';
 import { UploaderService, FileSystemService, PathSecurityService } from './services';
 import * as path from 'path';
 
 @Module({
   imports: [
+    ConfigModule,
     MulterModule.registerAsync({
       useFactory: (configService: ConfigService) => {
         const uploadDir = configService.get<string>('UPLOAD_DIR') || '';

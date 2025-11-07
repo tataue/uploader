@@ -11,5 +11,6 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true
-  }
+  },
+  "exclude": ["src/app", "src/app.bak", "node_modules", "dist"]
 }
