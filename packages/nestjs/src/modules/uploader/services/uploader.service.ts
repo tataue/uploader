@@ -1,8 +1,11 @@
-import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import * as path from 'path';
+import { Response } from 'express';
 import { FileSystemService } from './file-system.service';
 import { PathSecurityService } from './path-security.service';
+import { ArchiveService } from './archive.service';
 import { FileInfoDto } from '../dto';
+import { CustomLogger, LogContext } from '../../../common/logger/custom-logger.service';
 
 interface FileProcessBody {
   relativePath?: string | string[];
@@ -11,11 +14,11 @@ interface FileProcessBody {
 
 @Injectable()
 export class UploaderService {
-  private readonly logger = new Logger(UploaderService.name);
-
   constructor(
+    private readonly logger: CustomLogger,
     private fileSystemService: FileSystemService,
     private pathSecurityService: PathSecurityService,
+    private archiveService: ArchiveService,
   ) {}
 
   async getFileList(): Promise<FileInfoDto[]> {
@@ -23,7 +26,11 @@ export class UploaderService {
       const uploadDir = this.fileSystemService.getUploadDir();
       return await this.fileSystemService.buildFileTree(uploadDir);
     } catch (err) {
-      this.logger.error('Error reading directory', err instanceof Error ? err.stack : err);
+      this.logger.error(
+        'Error reading directory',
+        err instanceof Error ? err.stack : undefined,
+        LogContext.UPLOADER,
+      );
       return [];
     }
   }
@@ -46,9 +53,11 @@ export class UploaderService {
   ): Promise<void> {
     this.logger.log(
       `Processing ${files.length} files, body keys: ${Object.keys(body || {}).join(',')}`,
+      LogContext.UPLOADER,
     );
     this.logger.debug(
       `relativePath=${JSON.stringify(body?.relativePath)}, targetDir=${JSON.stringify(body?.targetDir)}`,
+      LogContext.UPLOADER,
     );
 
     const uploadDir = this.fileSystemService.getUploadDir();
@@ -60,6 +69,7 @@ export class UploaderService {
 
       this.logger.debug(
         `Processing file ${i}: originalname=${originalName}, destination=${file.destination}, filename=${file.filename}`,
+        LogContext.UPLOADER,
       );
 
       const relPath = Array.isArray(body?.relativePath)
@@ -77,6 +87,7 @@ export class UploaderService {
         targetPath = path.resolve(uploadDir, sanitizedRelPath);
         this.logger.debug(
           `Using relativePath: ${relPath} -> ${sanitizedRelPath} -> ${targetPath}`,
+          LogContext.UPLOADER,
         );
       } else if (targetDir) {
         const sanitizedTargetDir = this.pathSecurityService.sanitizeFilePath(targetDir);
@@ -86,6 +97,7 @@ export class UploaderService {
         targetPath = path.resolve(uploadDir, sanitizedTargetDir, sanitizedFileName);
         this.logger.debug(
           `Using targetDir: ${targetDir} + ${originalName} -> ${sanitizedTargetDir} + ${sanitizedFileName} -> ${targetPath}`,
+          LogContext.UPLOADER,
         );
       } else {
         const sanitizedFileName = path.basename(originalName);
@@ -93,6 +105,7 @@ export class UploaderService {
         targetPath = path.resolve(uploadDir, sanitizedFileName);
         this.logger.debug(
           `Root upload: ${originalName} -> ${sanitizedFileName} -> ${targetPath}`,
+          LogContext.UPLOADER,
         );
       }
 
@@ -102,15 +115,15 @@ export class UploaderService {
       await this.fileSystemService.ensureDir(targetDirPath);
 
       const sourceFile = path.resolve(file.destination, file.filename);
-      this.logger.debug(`Renaming: ${sourceFile} -> ${targetPath}`);
+      this.logger.debug(`Renaming: ${sourceFile} -> ${targetPath}`, LogContext.UPLOADER);
 
       await this.fileSystemService.moveFile(sourceFile, targetPath);
-      this.logger.log(`File ${i} moved successfully`);
+      this.logger.log(`File ${i} moved successfully`, LogContext.UPLOADER);
     }
   }
 
   async deleteFile(filePath: string): Promise<void> {
-    this.logger.log(`Deleting file: ${filePath}`);
+    this.logger.log(`Deleting file: ${filePath}`, LogContext.UPLOADER);
 
     const uploadDir = this.fileSystemService.getUploadDir();
     const fullPath = path.resolve(uploadDir, filePath);
@@ -118,6 +131,7 @@ export class UploaderService {
 
     this.logger.debug(
       `Full path: ${normalizedFullPath}, exists: ${this.fileSystemService.fileExists(normalizedFullPath)}`,
+      LogContext.UPLOADER,
     );
 
     this.pathSecurityService.validatePathInUploadDir(normalizedFullPath, uploadDir);
@@ -127,14 +141,14 @@ export class UploaderService {
     }
 
     await this.fileSystemService.removeFile(normalizedFullPath);
-    this.logger.log('File deleted successfully');
+    this.logger.log('File deleted successfully', LogContext.UPLOADER);
   }
 
   async getFilePathInfo(filePath: string): Promise<{
     fullPath: string;
     stats: import('fs').Stats;
   }> {
-    this.logger.debug(`Getting file path info: ${filePath}`);
+    this.logger.debug(`Getting file path info: ${filePath}`, LogContext.UPLOADER);
 
     const uploadDir = this.fileSystemService.getUploadDir();
     const fullPath = path.resolve(uploadDir, filePath);
@@ -157,14 +171,28 @@ export class UploaderService {
         const tempFile = path.resolve(file.destination, file.filename);
         if (this.fileSystemService.fileExists(tempFile)) {
           await this.fileSystemService.removeFile(tempFile);
-          this.logger.log(`Cleaned up temp file: ${tempFile}`);
+          this.logger.log(`Cleaned up temp file: ${tempFile}`, LogContext.UPLOADER);
         }
       } catch (cleanupError) {
         this.logger.error(
           'Failed to cleanup temp file',
-          cleanupError instanceof Error ? cleanupError.stack : cleanupError,
+          cleanupError instanceof Error ? cleanupError.stack : undefined,
+          LogContext.UPLOADER,
         );
       }
+    }
+  }
+
+  async downloadFile(filePath: string, res: Response): Promise<void> {
+    this.logger.debug(`Downloading: ${filePath}`, LogContext.UPLOADER);
+
+    const { fullPath, stats } = await this.getFilePathInfo(filePath);
+
+    if (stats.isFile()) {
+      this.logger.log(`Downloading file: ${fullPath}`, LogContext.UPLOADER);
+      res.download(fullPath);
+    } else {
+      await this.archiveService.createZipArchive(fullPath, res);
     }
   }
 }

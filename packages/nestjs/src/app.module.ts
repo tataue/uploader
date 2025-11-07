@@ -1,11 +1,16 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { join } from 'path';
 import configuration from './config/configuration';
 import { UploaderModule } from './modules/uploader/uploader.module';
 import { HealthModule } from './modules/health/health.module';
-import { HttpLoggerMiddleware } from './common/middleware';
+import { HttpLoggerMiddleware, RequestIdMiddleware } from './common/middleware';
+import { CustomLogger } from './common/logger/custom-logger.service';
+import { RequestContextService } from './common/context/request-context.service';
+import { ApmInterceptor } from './common/interceptors/apm.interceptor';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 @Module({
   imports: [
@@ -26,9 +31,24 @@ import { HttpLoggerMiddleware } from './common/middleware';
     UploaderModule,
     HealthModule,
   ],
+  providers: [
+    CustomLogger,
+    RequestContextService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ApmInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
+  ],
+  exports: [CustomLogger, RequestContextService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(HttpLoggerMiddleware).forRoutes('*');
+    consumer
+      .apply(RequestIdMiddleware, HttpLoggerMiddleware)
+      .forRoutes('*');
   }
 }

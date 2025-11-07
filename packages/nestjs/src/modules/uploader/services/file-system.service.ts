@@ -1,21 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
 import { promisify } from 'util';
 import { FileInfoDto } from '../dto';
+import { CustomLogger, LogContext } from '../../../common/logger/custom-logger.service';
 
 const readDir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 
 @Injectable()
 export class FileSystemService {
-  private readonly logger = new Logger(FileSystemService.name);
   private readonly uploadDir: string;
   private readonly tempFolderName = '.tmp';
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private readonly logger: CustomLogger,
+    private configService: ConfigService,
+  ) {
     this.uploadDir = this.configService.get<string>('UPLOAD_DIR') || '';
     fse.ensureDirSync(this.uploadDir);
     fse.ensureDirSync(path.join(this.uploadDir, this.tempFolderName));
@@ -69,7 +72,8 @@ export class FileSystemService {
       } catch (err) {
         this.logger.error(
           `Error getting stats for ${fileName}`,
-          err instanceof Error ? err.stack : err,
+          err instanceof Error ? err.stack : undefined,
+          LogContext.FILE_SYSTEM,
         );
       }
     }

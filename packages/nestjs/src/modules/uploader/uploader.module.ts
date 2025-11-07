@@ -2,7 +2,12 @@ import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UploaderController } from './controllers/uploader.controller';
-import { UploaderService, FileSystemService, PathSecurityService } from './services';
+import {
+  UploaderService,
+  FileSystemService,
+  PathSecurityService,
+  ArchiveService,
+} from './services';
 import * as path from 'path';
 
 @Module({
@@ -19,6 +24,6 @@ import * as path from 'path';
     }),
   ],
   controllers: [UploaderController],
-  providers: [UploaderService, FileSystemService, PathSecurityService],
+  providers: [UploaderService, FileSystemService, PathSecurityService, ArchiveService],
 })
 export class UploaderModule {}
