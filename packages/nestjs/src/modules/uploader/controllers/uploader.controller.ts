@@ -13,6 +13,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import { UploaderService, PathSecurityService } from '../services';
 import { FileInfoDto } from '../dto';
 import { CustomLogger, LogContext } from '../../../common/logger/custom-logger.service';
@@ -31,6 +32,7 @@ export class UploaderController {
   }
 
   @Post()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseInterceptors(AnyFilesInterceptor())
   async uploadFile(
     @Req() req: Request,

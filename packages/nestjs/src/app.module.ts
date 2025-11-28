@@ -1,7 +1,8 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { join } from 'path';
 import configuration from './config/configuration';
 import { UploaderModule } from './modules/uploader/uploader.module';
@@ -11,12 +12,25 @@ import { CustomLogger } from './common/logger/custom-logger.service';
 import { RequestContextService } from './common/context/request-context.service';
 import { ApmInterceptor } from './common/interceptors/apm.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { IpFilterGuard } from './common/guards';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
+    }),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        throttlers: [
+          {
+            ttl: config.get<number>('throttle.ttl', 60000),
+            limit: config.get<number>('throttle.limit', 100),
+          },
+        ],
+      }),
     }),
     ServeStaticModule.forRoot(
       {
@@ -34,6 +48,14 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
   providers: [
     CustomLogger,
     RequestContextService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: IpFilterGuard,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: ApmInterceptor,
