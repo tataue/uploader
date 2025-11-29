@@ -69,8 +69,14 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
     }
   };
 
+  const handleNavigateToDir = (path: string): void => {
+    clearSelection();
+    onNavigateToDir?.(path);
+  };
+
   const handleGoBack = (): void => {
     if (currentPath) {
+      clearSelection();
       const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
       onNavigateToDir?.(parentPath);
     }
@@ -85,7 +91,7 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onGoBack={handleGoBack}
-        onBreadcrumbClick={(path) => onNavigateToDir?.(path)}
+        onBreadcrumbClick={handleNavigateToDir}
         itemCount={filteredFiles.length}
       />
 
@@ -108,7 +114,7 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
             items={filteredFiles}
             onDelete={handleDelete}
             onDownload={handleDownload}
-            onNavigateToDir={(path) => onNavigateToDir?.(path)}
+            onNavigateToDir={handleNavigateToDir}
             isSelected={isSelected}
             onToggleSelect={toggleSelection}
           />
