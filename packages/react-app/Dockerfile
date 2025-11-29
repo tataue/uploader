@@ -1,5 +1,7 @@
-FROM nestapp-front-build:latest AS build
-
-FROM alpine
+FROM node:20-slim
 WORKDIR /app
-COPY --from=build /app/build  .
+COPY ./package.json ./
+RUN yarn
+COPY . .
+RUN yarn build
+RUN echo "nestapp-front build end"
