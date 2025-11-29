@@ -42,7 +42,7 @@ const FileNode: React.FC<FileNodeProps> = ({
   return (
     <div
       className={`rounded px-2 py-1 transition ${
-        selected ? 'bg-brand-50 ring-1 ring-brand-200' : 'bg-white/60'
+        selected ? 'bg-brand-50' : 'bg-white/60'
       }`}
       style={indentStyle}
     >

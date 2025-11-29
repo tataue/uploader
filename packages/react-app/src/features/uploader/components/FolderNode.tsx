@@ -46,7 +46,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   return (
     <div
       className={`rounded px-2 py-1 transition ${
-        selected ? 'bg-brand-50 ring-1 ring-brand-200' : 'bg-white/70'
+        selected ? 'bg-brand-50' : 'bg-white/70'
       }`}
       style={indentStyle}
     >
