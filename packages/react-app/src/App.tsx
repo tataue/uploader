@@ -8,13 +8,15 @@ function App() {
   const { fileList, refreshFileList } = useFileList();
   const [currentPath, setCurrentPath] = useState<string>('');
 
-  const handleDeleteFile = async (filename: string): Promise<void> => {
-    const response = await fetch(`./uploader/${encodeURIComponent(filename)}`, {
-      method: 'DELETE',
+  const handleBatchDelete = async (paths: string[]): Promise<void> => {
+    const response = await fetch('./uploader/batch-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paths }),
     });
 
     if (!response.ok) {
-      throw new Error('删除文件失败');
+      throw new Error('批量删除失败');
     }
 
     refreshFileList();
@@ -45,7 +47,7 @@ function App() {
           <UploadArea onUploadSuccess={refreshFileList} currentPath={currentPath} />
           <FileList
             files={fileList}
-            onDeleteFile={handleDeleteFile}
+            onBatchDelete={handleBatchDelete}
             currentPath={currentPath}
             onNavigateToDir={handleNavigateToDir}
           />

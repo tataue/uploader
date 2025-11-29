@@ -144,6 +144,25 @@ export class UploaderService {
     this.logger.log('File deleted successfully', LogContext.UPLOADER);
   }
 
+  async batchDelete(paths: string[]): Promise<{ path: string; success: boolean; error?: string }[]> {
+    this.logger.log(`Batch deleting ${paths.length} items`, LogContext.UPLOADER);
+
+    const results: { path: string; success: boolean; error?: string }[] = [];
+
+    for (const filePath of paths) {
+      try {
+        await this.deleteFile(filePath);
+        results.push({ path: filePath, success: true });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '删除失败';
+        this.logger.error(`Failed to delete ${filePath}: ${errorMessage}`, undefined, LogContext.UPLOADER);
+        results.push({ path: filePath, success: false, error: errorMessage });
+      }
+    }
+
+    return results;
+  }
+
   async getFilePathInfo(filePath: string): Promise<{
     fullPath: string;
     stats: import('fs').Stats;

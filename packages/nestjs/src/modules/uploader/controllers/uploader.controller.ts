@@ -5,6 +5,7 @@ import {
   Post,
   Delete,
   Param,
+  Body,
   Res,
   Req,
   UploadedFiles,
@@ -15,7 +16,7 @@ import {
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
 import { UploaderService, PathSecurityService } from '../services';
-import { FileInfoDto } from '../dto';
+import { FileInfoDto, BatchDeleteDto } from '../dto';
 import { CustomLogger, LogContext } from '../../../common/logger/custom-logger.service';
 
 @Controller('uploader')
@@ -85,6 +86,27 @@ export class UploaderController {
         LogContext.UPLOADER,
       );
       throw new HttpException('删除失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('batch-delete')
+  async batchDelete(
+    @Body() batchDeleteDto: BatchDeleteDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    try {
+      const results = await this.uploaderService.batchDelete(batchDeleteDto.paths);
+      res.json({ success: true, results });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        'Batch delete failed',
+        error instanceof Error ? error.stack : undefined,
+        LogContext.UPLOADER,
+      );
+      throw new HttpException('批量删除失败', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

@@ -24,6 +24,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
   const itemPath = item.path || item.name;
+  const selected = isSelected?.(itemPath) ?? false;
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -35,11 +36,28 @@ const FolderNode: React.FC<FolderNodeProps> = ({
     onNavigateToDir?.(itemPath);
   };
 
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    onToggleSelect?.(itemPath);
+  };
+
   const indentStyle = { paddingLeft: `${level * 1.25}rem` };
 
   return (
-    <div className="rounded-lg bg-white/70 p-2 transition hover:shadow-soft" style={indentStyle}>
-      <div className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-brand-50">
+    <div
+      className={`rounded-lg p-2 transition hover:shadow-soft ${
+        selected ? 'bg-brand-50 ring-1 ring-brand-200' : 'bg-white/70'
+      }`}
+      style={indentStyle}
+    >
+      <div className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-brand-50/50">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={handleCheckboxChange}
+          className="h-4 w-4 cursor-pointer rounded border-neutral-300 text-brand-500 focus:ring-brand-500"
+          aria-label={`选择 ${item.name}`}
+        />
         <button
           className="flex h-6 w-6 items-center justify-center rounded-md border border-transparent text-neutral-400 transition hover:border-brand-200 hover:text-brand-500"
           onClick={(e) => {

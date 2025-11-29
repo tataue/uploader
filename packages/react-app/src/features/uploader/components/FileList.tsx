@@ -9,12 +9,12 @@ import { useFileSelection } from '../hooks/useFileSelection';
 
 interface FileListProps {
   files: FileInfo[];
-  onDeleteFile: (filePath: string) => Promise<void>;
+  onBatchDelete: (paths: string[]) => Promise<void>;
   currentPath?: string;
   onNavigateToDir?: (dirPath: string) => void;
 }
 
-export default function FileList({ files, onDeleteFile, currentPath = '', onNavigateToDir }: FileListProps) {
+export default function FileList({ files, onBatchDelete, currentPath = '', onNavigateToDir }: FileListProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const displayedItems = useMemo(() => {
@@ -26,7 +26,7 @@ export default function FileList({ files, onDeleteFile, currentPath = '', onNavi
   const filteredFiles = searchQuery ? filterTree(displayedItems, searchQuery) : displayedItems;
 
   const {
-    selectedFiles,
+    selectedItems,
     selectedCount,
     isSelected,
     toggleSelection,
@@ -37,7 +37,7 @@ export default function FileList({ files, onDeleteFile, currentPath = '', onNavi
 
   const handleDelete = async (filePath: string): Promise<void> => {
     try {
-      await onDeleteFile(filePath);
+      await onBatchDelete([filePath]);
     } catch (error) {
       console.error('删除失败:', error);
       alert('删除失败，请稍后重试');
@@ -53,15 +53,18 @@ export default function FileList({ files, onDeleteFile, currentPath = '', onNavi
   };
 
   const handleBatchDelete = async (): Promise<void> => {
-    if (!confirm(`确定删除选中的 ${selectedCount} 个文件吗？`)) return;
-    for (const path of selectedFiles) {
-      await handleDelete(path);
+    if (!confirm(`确定删除选中的 ${selectedCount} 项吗？`)) return;
+    try {
+      await onBatchDelete(selectedItems);
+      clearSelection();
+    } catch (error) {
+      console.error('批量删除失败:', error);
+      alert('批量删除失败，请稍后重试');
     }
-    clearSelection();
   };
 
   const handleBatchDownload = (): void => {
-    for (const path of selectedFiles) {
+    for (const path of selectedItems) {
       handleDownload(path);
     }
   };
