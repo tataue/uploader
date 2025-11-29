@@ -33,7 +33,7 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
     selectAll,
     clearSelection,
     isAllSelected,
-  } = useFileSelection(filteredFiles);
+  } = useFileSelection(filteredFiles, files);
 
   const handleDelete = async (filePath: string): Promise<void> => {
     try {

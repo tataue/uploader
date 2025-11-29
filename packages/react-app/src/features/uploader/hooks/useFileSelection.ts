@@ -13,28 +13,65 @@ const collectAllPaths = (items: FileInfo[]): string[] => {
   return paths;
 };
 
-export const useFileSelection = (files: FileInfo[]) => {
+const findItemByPath = (items: FileInfo[], path: string): FileInfo | undefined => {
+  for (const item of items) {
+    const itemPath = item.path || item.name;
+    if (itemPath === path) return item;
+    if (item.isDir && item.children) {
+      const found = findItemByPath(item.children, path);
+      if (found) return found;
+    }
+  }
+  return undefined;
+};
+
+const getChildPaths = (item: FileInfo): string[] => {
+  if (!item.isDir || !item.children) return [];
+  return collectAllPaths(item.children);
+};
+
+export const useFileSelection = (files: FileInfo[], allFiles: FileInfo[]) => {
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
 
   const allPaths = useMemo(() => collectAllPaths(files), [files]);
   const allPathsSet = useMemo(() => new Set(allPaths), [allPaths]);
 
   const isSelected = useCallback(
-    (path: string) => selectedPaths.has(path),
+    (path: string) => {
+      if (selectedPaths.has(path)) return true;
+      const parts = path.split('/');
+      for (let i = 1; i < parts.length; i++) {
+        const parentPath = parts.slice(0, i).join('/');
+        if (selectedPaths.has(parentPath)) return true;
+      }
+      return false;
+    },
     [selectedPaths]
   );
 
-  const toggleSelection = useCallback((path: string) => {
-    setSelectedPaths((prev) => {
-      const next = new Set(prev);
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
-        next.add(path);
-      }
-      return next;
-    });
-  }, []);
+  const toggleSelection = useCallback(
+    (path: string) => {
+      setSelectedPaths((prev) => {
+        const next = new Set(prev);
+        const item = findItemByPath(allFiles, path);
+        const childPaths = item ? getChildPaths(item) : [];
+
+        if (next.has(path)) {
+          next.delete(path);
+          for (const childPath of childPaths) {
+            next.delete(childPath);
+          }
+        } else {
+          next.add(path);
+          for (const childPath of childPaths) {
+            next.add(childPath);
+          }
+        }
+        return next;
+      });
+    },
+    [allFiles]
+  );
 
   const selectAll = useCallback(() => {
     setSelectedPaths((prev) => new Set([...Array.from(prev), ...allPaths]));
@@ -60,8 +97,8 @@ export const useFileSelection = (files: FileInfo[]) => {
   );
 
   const isAllSelected = useMemo(
-    () => allPaths.length > 0 && allPaths.every((p) => selectedPaths.has(p)),
-    [allPaths, selectedPaths]
+    () => allPaths.length > 0 && allPaths.every((p) => isSelected(p)),
+    [allPaths, isSelected]
   );
 
   const hasSelection = selectedItems.length > 0;
