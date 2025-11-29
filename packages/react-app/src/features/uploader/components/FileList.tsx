@@ -99,11 +99,11 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
       />
 
       {filteredFiles.length === 0 ? (
-        <div className="card card-hover rounded-xl border border-dashed border-neutral-200/70 p-8 text-center text-sm text-neutral-500">
+        <div className="card rounded-xl border border-dashed border-neutral-200/70 p-8 text-center text-sm text-neutral-500">
           {searchQuery ? `未找到匹配 "${searchQuery}" 的文件` : '当前目录为空'}
         </div>
       ) : (
-        <div className="card card-hover p-6 backdrop-blur-sm">
+        <div className="card p-6 backdrop-blur-sm">
           <DirectoryTree
             items={filteredFiles}
             onDelete={handleDelete}

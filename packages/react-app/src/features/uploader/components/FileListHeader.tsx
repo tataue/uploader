@@ -22,7 +22,7 @@ const FileListHeader: React.FC<FileListHeaderProps> = ({
   const breadcrumbs = getBreadcrumbs(currentPath);
 
   return (
-    <header className="card card-hover space-y-5 p-6 backdrop-blur-sm">
+    <header className="card space-y-5 p-6 backdrop-blur-sm">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-brand-500">
