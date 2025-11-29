@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileInfo } from '../types/FileInfo';
+import { SelectionState } from '../hooks/useFileSelection';
 import FolderNode from './FolderNode';
 import FileNode from './FileNode';
 
@@ -10,6 +11,7 @@ interface TreeNodeProps {
   onNavigateToDir?: (path: string) => void;
   level: number;
   isSelected?: (path: string) => boolean;
+  getSelectionState?: (path: string) => SelectionState;
   onToggleSelect?: (path: string) => void;
 }
 

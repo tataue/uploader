@@ -13,6 +13,19 @@ const collectAllPaths = (items: FileInfo[]): string[] => {
   return paths;
 };
 
+const collectFilePaths = (items: FileInfo[]): string[] => {
+  const paths: string[] = [];
+  for (const item of items) {
+    const itemPath = item.path || item.name;
+    if (!item.isDir) {
+      paths.push(itemPath);
+    } else if (item.children) {
+      paths.push(...collectFilePaths(item.children));
+    }
+  }
+  return paths;
+};
+
 const findItemByPath = (items: FileInfo[], path: string): FileInfo | undefined => {
   for (const item of items) {
     const itemPath = item.path || item.name;
@@ -30,47 +43,62 @@ const getChildPaths = (item: FileInfo): string[] => {
   return collectAllPaths(item.children);
 };
 
-const getParentPath = (path: string): string | null => {
-  const lastSlash = path.lastIndexOf('/');
-  return lastSlash > 0 ? path.substring(0, lastSlash) : null;
-};
+export type SelectionState = 'none' | 'partial' | 'all';
 
 export const useFileSelection = (files: FileInfo[], allFiles: FileInfo[]) => {
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
   const [excludedPaths, setExcludedPaths] = useState<Set<string>>(new Set());
 
   const allPaths = useMemo(() => collectAllPaths(files), [files]);
-  const allPathsSet = useMemo(() => new Set(allPaths), [allPaths]);
 
-  const hasSelectedParent = useCallback(
-    (path: string, selected: Set<string>, excluded: Set<string>): boolean => {
+  const isPathSelected = useCallback(
+    (path: string): boolean => {
+      if (excludedPaths.has(path)) return false;
+      if (selectedPaths.has(path)) return true;
       const parts = path.split('/');
       for (let i = 1; i < parts.length; i++) {
         const parentPath = parts.slice(0, i).join('/');
-        if (selected.has(parentPath) && !excluded.has(path)) return true;
+        if (selectedPaths.has(parentPath) && !excludedPaths.has(path)) return true;
       }
       return false;
     },
-    []
+    [selectedPaths, excludedPaths]
   );
 
-  const isSelected = useCallback(
-    (path: string) => {
-      if (excludedPaths.has(path)) return false;
-      if (selectedPaths.has(path)) return true;
-      return hasSelectedParent(path, selectedPaths, excludedPaths);
+  const getSelectionState = useCallback(
+    (path: string, item?: FileInfo): SelectionState => {
+      const resolvedItem = item || findItemByPath(allFiles, path);
+      if (!resolvedItem?.isDir) {
+        return isPathSelected(path) ? 'all' : 'none';
+      }
+      const childPaths = getChildPaths(resolvedItem);
+      if (childPaths.length === 0) {
+        return isPathSelected(path) ? 'all' : 'none';
+      }
+      const selectedCount = childPaths.filter((p) => isPathSelected(p)).length;
+      if (selectedCount === 0) return 'none';
+      if (selectedCount === childPaths.length) return 'all';
+      return 'partial';
     },
-    [selectedPaths, excludedPaths, hasSelectedParent]
+    [allFiles, isPathSelected]
   );
 
   const toggleSelection = useCallback(
     (path: string) => {
-      const currentlySelected = isSelected(path);
       const item = findItemByPath(allFiles, path);
       const childPaths = item ? getChildPaths(item) : [];
+      const state = getSelectionState(path, item);
 
-      if (currentlySelected) {
+      if (state === 'none') {
         setSelectedPaths((prev) => {
+          const next = new Set(prev);
+          next.add(path);
+          for (const childPath of childPaths) {
+            next.add(childPath);
+          }
+          return next;
+        });
+        setExcludedPaths((prev) => {
           const next = new Set(prev);
           next.delete(path);
           for (const childPath of childPaths) {
@@ -78,34 +106,43 @@ export const useFileSelection = (files: FileInfo[], allFiles: FileInfo[]) => {
           }
           return next;
         });
-        setExcludedPaths((prev) => {
+      } else if (state === 'partial') {
+        setSelectedPaths((prev) => {
           const next = new Set(prev);
           next.add(path);
           for (const childPath of childPaths) {
             next.add(childPath);
+          }
+          return next;
+        });
+        setExcludedPaths((prev) => {
+          const next = new Set(prev);
+          next.delete(path);
+          for (const childPath of childPaths) {
+            next.delete(childPath);
           }
           return next;
         });
       } else {
         setSelectedPaths((prev) => {
           const next = new Set(prev);
-          next.add(path);
-          for (const childPath of childPaths) {
-            next.add(childPath);
-          }
-          return next;
-        });
-        setExcludedPaths((prev) => {
-          const next = new Set(prev);
           next.delete(path);
           for (const childPath of childPaths) {
             next.delete(childPath);
           }
           return next;
         });
+        setExcludedPaths((prev) => {
+          const next = new Set(prev);
+          next.add(path);
+          for (const childPath of childPaths) {
+            next.add(childPath);
+          }
+          return next;
+        });
       }
     },
-    [allFiles, isSelected]
+    [allFiles, getSelectionState]
   );
 
   const selectAll = useCallback(() => {
@@ -142,21 +179,56 @@ export const useFileSelection = (files: FileInfo[], allFiles: FileInfo[]) => {
   }, []);
 
   const selectedItems = useMemo(
-    () => allPaths.filter((p) => isSelected(p)),
-    [allPaths, isSelected]
+    () => allPaths.filter((p) => isPathSelected(p)),
+    [allPaths, isPathSelected]
   );
 
+  const effectiveSelectedPaths = useMemo(() => {
+    const result: string[] = [];
+    const processedDirs = new Set<string>();
+
+    for (const path of selectedItems) {
+      const item = findItemByPath(allFiles, path);
+      if (item?.isDir) {
+        const state = getSelectionState(path, item);
+        if (state === 'all') {
+          result.push(path);
+          processedDirs.add(path);
+        }
+      }
+    }
+
+    for (const path of selectedItems) {
+      let hasFullySelectedParent = false;
+      for (const dir of Array.from(processedDirs)) {
+        if (path.startsWith(dir + '/')) {
+          hasFullySelectedParent = true;
+          break;
+        }
+      }
+      if (!hasFullySelectedParent) {
+        const item = findItemByPath(allFiles, path);
+        if (!item?.isDir) {
+          result.push(path);
+        }
+      }
+    }
+
+    return result;
+  }, [selectedItems, allFiles, getSelectionState]);
+
   const isAllSelected = useMemo(
-    () => allPaths.length > 0 && allPaths.every((p) => isSelected(p)),
-    [allPaths, isSelected]
+    () => allPaths.length > 0 && allPaths.every((p) => isPathSelected(p)),
+    [allPaths, isPathSelected]
   );
 
   const hasSelection = selectedItems.length > 0;
 
   return {
-    selectedItems,
+    selectedItems: effectiveSelectedPaths,
     selectedCount: selectedItems.length,
-    isSelected,
+    isSelected: isPathSelected,
+    getSelectionState,
     toggleSelection,
     selectAll,
     clearSelection,

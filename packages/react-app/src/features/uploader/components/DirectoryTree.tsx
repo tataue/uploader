@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileInfo } from '../types/FileInfo';
+import { SelectionState } from '../hooks/useFileSelection';
 import TreeNode from './TreeNode';
 
 interface DirectoryTreeProps {
@@ -8,6 +9,7 @@ interface DirectoryTreeProps {
   onDownload: (path: string) => void;
   onNavigateToDir?: (path: string) => void;
   isSelected?: (path: string) => boolean;
+  getSelectionState?: (path: string) => SelectionState;
   onToggleSelect?: (path: string) => void;
 }
 
@@ -17,6 +19,7 @@ const DirectoryTree: React.FC<DirectoryTreeProps> = ({
   onDownload,
   onNavigateToDir,
   isSelected,
+  getSelectionState,
   onToggleSelect,
 }) => {
   if (items.length === 0) {
@@ -38,6 +41,7 @@ const DirectoryTree: React.FC<DirectoryTreeProps> = ({
           onNavigateToDir={onNavigateToDir}
           level={0}
           isSelected={isSelected}
+          getSelectionState={getSelectionState}
           onToggleSelect={onToggleSelect}
         />
       ))}

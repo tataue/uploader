@@ -29,6 +29,7 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
     selectedItems,
     selectedCount,
     isSelected,
+    getSelectionState,
     toggleSelection,
     selectAll,
     clearSelection,
@@ -114,6 +115,7 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
             onDownload={handleDownload}
             onNavigateToDir={handleNavigateToDir}
             isSelected={isSelected}
+            getSelectionState={getSelectionState}
             onToggleSelect={toggleSelection}
           />
         </div>

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Folder, Trash2, LogIn } from 'lucide-react';
 import { FileInfo } from '../types/FileInfo';
+import { SelectionState } from '../hooks/useFileSelection';
 import TreeNode from './TreeNode';
 
 interface FolderNodeProps {
@@ -10,6 +11,7 @@ interface FolderNodeProps {
   onNavigateToDir?: (path: string) => void;
   level: number;
   isSelected?: (path: string) => boolean;
+  getSelectionState?: (path: string) => SelectionState;
   onToggleSelect?: (path: string) => void;
 }
 
@@ -20,11 +22,19 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   onNavigateToDir,
   level,
   isSelected,
+  getSelectionState,
   onToggleSelect,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const checkboxRef = useRef<HTMLInputElement>(null);
   const itemPath = item.path || item.name;
-  const selected = isSelected?.(itemPath) ?? false;
+  const selectionState = getSelectionState?.(itemPath) ?? 'none';
+
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = selectionState === 'partial';
+    }
+  }, [selectionState]);
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,8 +46,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
     onNavigateToDir?.(itemPath);
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
+  const handleCheckboxChange = () => {
     onToggleSelect?.(itemPath);
   };
 
@@ -46,16 +55,17 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   return (
     <div
       className={`rounded px-2 py-1 transition ${
-        selected ? 'bg-brand-50' : 'bg-white/70'
+        selectionState !== 'none' ? 'bg-brand-50' : 'bg-white/70'
       }`}
       style={indentStyle}
     >
       <div className="group flex items-center gap-1.5">
         <input
+          ref={checkboxRef}
           type="checkbox"
-          checked={selected}
+          checked={selectionState === 'all'}
           onChange={handleCheckboxChange}
-          className="h-3.5 w-3.5 cursor-pointer rounded border-neutral-200 text-neutral-300 transition-colors hover:border-brand-400 hover:text-brand-500 checked:text-brand-500 focus:ring-brand-500"
+          className="h-3.5 w-3.5 cursor-pointer rounded border-neutral-200 text-neutral-300 transition-colors hover:border-brand-400 hover:text-brand-500 checked:text-brand-500 indeterminate:text-brand-400 focus:ring-brand-500"
           aria-label={`选择 ${item.name}`}
         />
         <button
@@ -106,6 +116,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
               onNavigateToDir={onNavigateToDir}
               level={level + 1}
               isSelected={isSelected}
+              getSelectionState={getSelectionState}
               onToggleSelect={onToggleSelect}
             />
           ))}
