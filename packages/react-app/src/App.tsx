@@ -2,6 +2,7 @@ import { useState } from 'react';
 import UploadArea from './features/uploader/components/UploadArea';
 import { useFileList } from './features/uploader/hooks/useFileList';
 import FileList from './features/uploader/components/FileList';
+import Logo from './components/Logo';
 
 function App() {
   const { fileList, refreshFileList } = useFileList();
@@ -27,6 +28,9 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100 py-12">
       <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-8 px-4 sm:px-6 lg:px-12 xl:px-16">
         <header className="flex flex-col gap-4 text-center lg:text-left">
+          <div className="mx-auto lg:mx-0">
+            <Logo />
+          </div>
           <span className="mx-auto flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-brand-500 lg:m-0">
             <span className="h-[2px] w-6 bg-brand-500" />
             上传中心
