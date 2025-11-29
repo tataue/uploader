@@ -52,12 +52,12 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
       </div>
 
       {uploadProgress.length > 0 && (
-        <ul className="scrollbar-slim max-h-96 space-y-2 overflow-y-auto rounded-lg bg-white/60 p-3 text-xs text-neutral-600 shadow-inner">
+        <ul className="scrollbar-slim max-h-96 space-y-2 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-3 text-xs text-neutral-600">
           {uploadProgress.map((file, index) => {
             const value = clampProgress(file.progress);
             const isCompleted = file.completed || file.progress >= 100;
             return (
-              <li key={`${file.fileName}-${index}`} className="space-y-1.5 rounded-md border border-transparent bg-white/70 p-2.5 shadow-soft transition hover:border-brand-200/80">
+              <li key={`${file.fileName}-${index}`} className="space-y-1.5 rounded-md bg-neutral-50 p-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="max-w-[70%] truncate font-medium text-neutral-700" title={file.fileName}>
                     {file.fileName}
