@@ -71,7 +71,7 @@ const FileListHeader: React.FC<FileListHeaderProps> = ({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="搜索文件或文件夹..."
-            className="input-base rounded-full pl-11 pr-4 shadow-soft"
+            className="w-full rounded-full border border-neutral-200 bg-neutral-50 py-2 pl-11 pr-4 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-brand-400 focus:bg-white focus:outline-none"
             aria-label="搜索文件或文件夹"
           />
           {searchQuery && (
