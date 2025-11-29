@@ -52,7 +52,7 @@ const FileNode: React.FC<FileNodeProps> = ({
           checked={selected}
           onChange={handleCheckboxChange}
           className={`h-3.5 w-3.5 cursor-pointer rounded border-neutral-200 transition-colors hover:border-brand-400 hover:text-brand-500 checked:text-brand-500 focus:ring-brand-500 ${
-            selected ? 'text-brand-500' : 'text-transparent group-hover:text-neutral-300'
+            selected ? '' : 'invisible group-hover:visible'
           }`}
           aria-label={`选择 ${item.name}`}
         />
