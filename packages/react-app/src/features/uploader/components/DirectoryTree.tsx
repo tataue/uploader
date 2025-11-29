@@ -28,7 +28,7 @@ const DirectoryTree: React.FC<DirectoryTreeProps> = ({
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       {items.map((item) => (
         <TreeNode
           key={item.path || item.name}
