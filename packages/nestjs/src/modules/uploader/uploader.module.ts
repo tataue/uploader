@@ -8,6 +8,8 @@ import {
   PathSecurityService,
   ArchiveService,
 } from './services';
+import { CustomLogger } from '../../common/logger/custom-logger.service';
+import { RequestContextService } from '../../common/context/request-context.service';
 import * as path from 'path';
 
 @Module({
@@ -24,6 +26,13 @@ import * as path from 'path';
     }),
   ],
   controllers: [UploaderController],
-  providers: [UploaderService, FileSystemService, PathSecurityService, ArchiveService],
+  providers: [
+    CustomLogger,
+    RequestContextService,
+    UploaderService,
+    FileSystemService,
+    PathSecurityService,
+    ArchiveService,
+  ],
 })
 export class UploaderModule {}
