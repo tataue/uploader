@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { FileInfo } from '../types/FileInfo';
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  timestamp: string;
+}
+
 const fileListUrl = './uploader';
 
 export const useFileList = () => {
@@ -14,9 +20,9 @@ export const useFileList = () => {
     
     fetch(fileListUrl, { signal: abortController.signal })
       .then((res) => res.json())
-      .then((data: FileInfo[]) => {
+      .then((response: ApiResponse<FileInfo[]>) => {
         if (isMountedRef.current) {
-          setFileList(data);
+          setFileList(response.data ?? []);
         }
       })
       .catch((error) => {
