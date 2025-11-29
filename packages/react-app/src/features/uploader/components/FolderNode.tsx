@@ -65,7 +65,9 @@ const FolderNode: React.FC<FolderNodeProps> = ({
           type="checkbox"
           checked={selectionState === 'all'}
           onChange={handleCheckboxChange}
-          className="h-3.5 w-3.5 cursor-pointer rounded border-neutral-200 text-neutral-300 transition-colors hover:border-brand-400 hover:text-brand-500 checked:text-brand-500 indeterminate:text-brand-400 focus:ring-brand-500"
+          className={`h-3.5 w-3.5 cursor-pointer rounded border-neutral-200 transition-colors hover:border-brand-400 hover:text-brand-500 checked:text-brand-500 indeterminate:text-brand-400 focus:ring-brand-500 ${
+            selectionState !== 'none' ? 'text-brand-500' : 'text-transparent group-hover:text-neutral-300'
+          }`}
           aria-label={`选择 ${item.name}`}
         />
         <button
