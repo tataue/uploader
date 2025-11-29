@@ -17,6 +17,7 @@ export const useFileSelection = (files: FileInfo[]) => {
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
 
   const allPaths = useMemo(() => collectAllPaths(files), [files]);
+  const allPathsSet = useMemo(() => new Set(allPaths), [allPaths]);
 
   const isSelected = useCallback(
     (path: string) => selectedPaths.has(path),
@@ -36,16 +37,26 @@ export const useFileSelection = (files: FileInfo[]) => {
   }, []);
 
   const selectAll = useCallback(() => {
-    setSelectedPaths(new Set(allPaths));
+    setSelectedPaths((prev) => new Set([...Array.from(prev), ...allPaths]));
   }, [allPaths]);
 
   const clearSelection = useCallback(() => {
+    setSelectedPaths((prev) => {
+      const next = new Set(prev);
+      for (const path of allPaths) {
+        next.delete(path);
+      }
+      return next;
+    });
+  }, [allPaths]);
+
+  const clearAll = useCallback(() => {
     setSelectedPaths(new Set());
   }, []);
 
   const selectedItems = useMemo(
-    () => Array.from(selectedPaths),
-    [selectedPaths]
+    () => Array.from(selectedPaths).filter((p) => allPathsSet.has(p)),
+    [selectedPaths, allPathsSet]
   );
 
   const isAllSelected = useMemo(
@@ -53,15 +64,16 @@ export const useFileSelection = (files: FileInfo[]) => {
     [allPaths, selectedPaths]
   );
 
-  const hasSelection = selectedPaths.size > 0;
+  const hasSelection = selectedItems.length > 0;
 
   return {
     selectedItems,
-    selectedCount: selectedPaths.size,
+    selectedCount: selectedItems.length,
     isSelected,
     toggleSelection,
     selectAll,
     clearSelection,
+    clearAll,
     isAllSelected,
     hasSelection,
   };

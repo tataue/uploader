@@ -70,13 +70,11 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
   };
 
   const handleNavigateToDir = (path: string): void => {
-    clearSelection();
     onNavigateToDir?.(path);
   };
 
   const handleGoBack = (): void => {
     if (currentPath) {
-      clearSelection();
       const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
       onNavigateToDir?.(parentPath);
     }
