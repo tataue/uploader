@@ -41,12 +41,12 @@ const FileNode: React.FC<FileNodeProps> = ({
 
   return (
     <div
-      className={`rounded px-2 py-1 transition hover:shadow-soft ${
+      className={`rounded px-2 py-1 transition ${
         selected ? 'bg-brand-50 ring-1 ring-brand-200' : 'bg-white/60'
       }`}
       style={indentStyle}
     >
-      <div className="flex items-center gap-1.5 text-sm text-neutral-700">
+      <div className="group flex items-center gap-1.5 text-sm text-neutral-700">
         <input
           type="checkbox"
           checked={selected}
@@ -58,7 +58,7 @@ const FileNode: React.FC<FileNodeProps> = ({
         <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-neutral-100 text-neutral-400">
           <File size={14} />
         </div>
-        <span className="flex-1 truncate" title={item.name}>
+        <span className="flex-1 truncate group-hover:text-brand-600" title={item.name}>
           {item.name}
         </span>
         <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-500">

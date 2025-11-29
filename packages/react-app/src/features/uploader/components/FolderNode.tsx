@@ -45,12 +45,12 @@ const FolderNode: React.FC<FolderNodeProps> = ({
 
   return (
     <div
-      className={`rounded px-2 py-1 transition hover:shadow-soft ${
+      className={`rounded px-2 py-1 transition ${
         selected ? 'bg-brand-50 ring-1 ring-brand-200' : 'bg-white/70'
       }`}
       style={indentStyle}
     >
-      <div className="flex items-center gap-1.5 hover:bg-brand-50/50">
+      <div className="group flex items-center gap-1.5">
         <input
           type="checkbox"
           checked={selected}
@@ -73,7 +73,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
           <Folder size={14} />
         </div>
         <span
-          className="flex-1 cursor-pointer text-sm font-medium text-neutral-900 hover:text-brand-600"
+          className="flex-1 cursor-pointer text-sm font-medium text-neutral-900 group-hover:text-brand-600"
           onClick={handleNavigate}
         >
           {item.name}
