@@ -1,0 +1,93 @@
+import React from 'react';
+import { ChevronLeft, Search } from 'lucide-react';
+import { getBreadcrumbs } from '../utils/fileTreeUtils';
+
+interface FileListHeaderProps {
+  currentPath: string;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  onGoBack: () => void;
+  onBreadcrumbClick: (path: string) => void;
+  itemCount: number;
+}
+
+const FileListHeader: React.FC<FileListHeaderProps> = ({
+  currentPath,
+  searchQuery,
+  onSearchChange,
+  onGoBack,
+  onBreadcrumbClick,
+  itemCount,
+}) => {
+  const breadcrumbs = getBreadcrumbs(currentPath);
+
+  return (
+    <header className="card card-hover space-y-5 p-6 backdrop-blur-sm">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-brand-500">
+            <span className="h-1 w-1 rounded-full bg-brand-500" />
+            <span>资源管理器</span>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold text-neutral-900">文件列表</h2>
+            <p className="text-sm text-neutral-500">浏览、搜索和管理已上传的文件与文件夹</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500">
+            <span>当前目录:</span>
+            <nav className="flex flex-wrap items-center gap-1 rounded-full bg-neutral-100/70 px-3 py-1 text-neutral-700 shadow-inner">
+              {([{ name: '根目录', path: '' }, ...breadcrumbs] as const).map((crumb, index) => (
+                <React.Fragment key={crumb.path || `root-${index}`}>
+                  {index > 0 && <span className="text-neutral-300">/</span>}
+                  <button
+                    onClick={() => onBreadcrumbClick(crumb.path)}
+                    className={`rounded-full px-2 py-0.5 text-sm transition hover:bg-white hover:text-brand-600 ${
+                      crumb.path === currentPath ? 'font-semibold text-brand-600' : ''
+                    }`}
+                  >
+                    {crumb.name}
+                  </button>
+                </React.Fragment>
+              ))}
+            </nav>
+          </div>
+        </div>
+        {currentPath && (
+          <button
+            onClick={onGoBack}
+            className="btn-ghost flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white hover:bg-neutral-800"
+          >
+            <ChevronLeft size={16} />
+            返回上级
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="搜索文件或文件夹..."
+            className="input-base rounded-full pl-11 pr-4 shadow-soft"
+            aria-label="搜索文件或文件夹"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => onSearchChange('')}
+              className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-neutral-200/80 text-xs text-neutral-600 hover:bg-neutral-300"
+              aria-label="清除搜索"
+            >
+              ×
+            </button>
+          )}
+        </div>
+        <span className="text-xs text-neutral-400">共 {itemCount} 项</span>
+      </div>
+    </header>
+  );
+};
+
+export default FileListHeader;
