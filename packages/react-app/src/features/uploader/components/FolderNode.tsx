@@ -69,7 +69,9 @@ const FolderNode: React.FC<FolderNodeProps> = ({
         >
           {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
-        <Folder size={18} className="text-brand-500" />
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-500">
+          <Folder size={16} />
+        </div>
         <span
           className="flex-1 cursor-pointer text-sm font-medium text-neutral-900 hover:text-brand-600"
           onClick={handleNavigate}
