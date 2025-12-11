@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Response } from 'express';
 import { FileSystemService } from './file-system.service';
 import { PathSecurityService } from './path-security.service';
-import { ArchiveService } from './archive.service';
+import { ArchiveService, ArchiveItem } from './archive.service';
 import { FileInfoDto } from '../dto';
 import { CustomLogger, LogContext } from '../../../common/logger/custom-logger.service';
 
@@ -213,5 +213,22 @@ export class UploaderService {
     } else {
       await this.archiveService.createZipArchive(fullPath, res);
     }
+  }
+
+  async batchDownload(paths: string[], res: Response): Promise<void> {
+    this.logger.log(`Batch downloading ${paths.length} items`, LogContext.UPLOADER);
+
+    const items: ArchiveItem[] = [];
+
+    for (const filePath of paths) {
+      const { fullPath, stats } = await this.getFilePathInfo(filePath);
+      items.push({
+        fullPath,
+        relativePath: filePath,
+        isDir: stats.isDirectory(),
+      });
+    }
+
+    await this.archiveService.createBatchZipArchive(items, res);
   }
 }

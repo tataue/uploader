@@ -16,7 +16,7 @@ import {
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
 import { UploaderService, PathSecurityService } from '../services';
-import { FileInfoDto, BatchDeleteDto } from '../dto';
+import { FileInfoDto, BatchDeleteDto, BatchDownloadDto } from '../dto';
 import { CustomLogger, LogContext } from '../../../common/logger/custom-logger.service';
 
 @Controller('uploader')
@@ -128,6 +128,26 @@ export class UploaderController {
         LogContext.UPLOADER,
       );
       throw new HttpException('下载失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('batch-download')
+  async batchDownload(
+    @Body() batchDownloadDto: BatchDownloadDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    try {
+      await this.uploaderService.batchDownload(batchDownloadDto.paths, res);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        'Batch download failed',
+        error instanceof Error ? error.stack : undefined,
+        LogContext.UPLOADER,
+      );
+      throw new HttpException('批量下载失败', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

@@ -64,9 +64,28 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
     }
   };
 
-  const handleBatchDownload = (): void => {
-    for (const path of selectedItems) {
-      handleDownload(path);
+  const handleBatchDownload = async (): Promise<void> => {
+    try {
+      const response = await fetch('./uploader/batch-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paths: selectedItems }),
+      });
+      if (!response.ok) throw new Error('下载失败');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const disposition = response.headers.get('Content-Disposition');
+      const filename = disposition?.match(/filename="(.+)"/)?.[1] || 'batch-download.zip';
+      link.download = decodeURIComponent(filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('批量下载失败:', error);
+      alert('批量下载失败，请稍后重试');
     }
   };
 
