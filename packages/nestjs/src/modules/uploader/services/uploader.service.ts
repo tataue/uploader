@@ -63,63 +63,64 @@ export class UploaderService {
     const uploadDir = this.fileSystemService.getUploadDir();
     const resolvedUploadDir = path.resolve(uploadDir);
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const originalName = this.decodeFilename(file.originalname);
+    await Promise.all(
+      files.map(async (file, i) => {
+        const originalName = this.decodeFilename(file.originalname);
 
-      this.logger.debug(
-        `Processing file ${i}: originalname=${originalName}, destination=${file.destination}, filename=${file.filename}`,
-        LogContext.UPLOADER,
-      );
-
-      const relPath = Array.isArray(body?.relativePath)
-        ? body.relativePath[i]
-        : body?.relativePath;
-      const targetDir = Array.isArray(body?.targetDir)
-        ? body.targetDir[i]
-        : body?.targetDir;
-
-      let targetPath: string;
-
-      if (relPath) {
-        const sanitizedRelPath = this.pathSecurityService.sanitizeFilePath(relPath);
-        this.pathSecurityService.validatePathSegment(sanitizedRelPath);
-        targetPath = path.resolve(uploadDir, sanitizedRelPath);
         this.logger.debug(
-          `Using relativePath: ${relPath} -> ${sanitizedRelPath} -> ${targetPath}`,
+          `Processing file ${i}: originalname=${originalName}, destination=${file.destination}, filename=${file.filename}`,
           LogContext.UPLOADER,
         );
-      } else if (targetDir) {
-        const sanitizedTargetDir = this.pathSecurityService.sanitizeFilePath(targetDir);
-        const sanitizedFileName = path.basename(originalName);
-        this.pathSecurityService.validatePathSegment(sanitizedTargetDir);
-        this.pathSecurityService.validatePathSegment(sanitizedFileName);
-        targetPath = path.resolve(uploadDir, sanitizedTargetDir, sanitizedFileName);
-        this.logger.debug(
-          `Using targetDir: ${targetDir} + ${originalName} -> ${sanitizedTargetDir} + ${sanitizedFileName} -> ${targetPath}`,
-          LogContext.UPLOADER,
-        );
-      } else {
-        const sanitizedFileName = path.basename(originalName);
-        this.pathSecurityService.validatePathSegment(sanitizedFileName);
-        targetPath = path.resolve(uploadDir, sanitizedFileName);
-        this.logger.debug(
-          `Root upload: ${originalName} -> ${sanitizedFileName} -> ${targetPath}`,
-          LogContext.UPLOADER,
-        );
-      }
 
-      this.pathSecurityService.validatePathInUploadDir(targetPath, resolvedUploadDir);
+        const relPath = Array.isArray(body?.relativePath)
+          ? body.relativePath[i]
+          : body?.relativePath;
+        const targetDir = Array.isArray(body?.targetDir)
+          ? body.targetDir[i]
+          : body?.targetDir;
 
-      const targetDirPath = path.dirname(targetPath);
-      await this.fileSystemService.ensureDir(targetDirPath);
+        let targetPath: string;
 
-      const sourceFile = path.resolve(file.destination, file.filename);
-      this.logger.debug(`Renaming: ${sourceFile} -> ${targetPath}`, LogContext.UPLOADER);
+        if (relPath) {
+          const sanitizedRelPath = this.pathSecurityService.sanitizeFilePath(relPath);
+          this.pathSecurityService.validatePathSegment(sanitizedRelPath);
+          targetPath = path.resolve(uploadDir, sanitizedRelPath);
+          this.logger.debug(
+            `Using relativePath: ${relPath} -> ${sanitizedRelPath} -> ${targetPath}`,
+            LogContext.UPLOADER,
+          );
+        } else if (targetDir) {
+          const sanitizedTargetDir = this.pathSecurityService.sanitizeFilePath(targetDir);
+          const sanitizedFileName = path.basename(originalName);
+          this.pathSecurityService.validatePathSegment(sanitizedTargetDir);
+          this.pathSecurityService.validatePathSegment(sanitizedFileName);
+          targetPath = path.resolve(uploadDir, sanitizedTargetDir, sanitizedFileName);
+          this.logger.debug(
+            `Using targetDir: ${targetDir} + ${originalName} -> ${sanitizedTargetDir} + ${sanitizedFileName} -> ${targetPath}`,
+            LogContext.UPLOADER,
+          );
+        } else {
+          const sanitizedFileName = path.basename(originalName);
+          this.pathSecurityService.validatePathSegment(sanitizedFileName);
+          targetPath = path.resolve(uploadDir, sanitizedFileName);
+          this.logger.debug(
+            `Root upload: ${originalName} -> ${sanitizedFileName} -> ${targetPath}`,
+            LogContext.UPLOADER,
+          );
+        }
 
-      await this.fileSystemService.moveFile(sourceFile, targetPath);
-      this.logger.log(`File ${i} moved successfully`, LogContext.UPLOADER);
-    }
+        this.pathSecurityService.validatePathInUploadDir(targetPath, resolvedUploadDir);
+
+        const targetDirPath = path.dirname(targetPath);
+        await this.fileSystemService.ensureDir(targetDirPath);
+
+        const sourceFile = path.resolve(file.destination, file.filename);
+        this.logger.debug(`Renaming: ${sourceFile} -> ${targetPath}`, LogContext.UPLOADER);
+
+        await this.fileSystemService.moveFile(sourceFile, targetPath);
+        this.logger.log(`File ${i} moved successfully`, LogContext.UPLOADER);
+      }),
+    );
   }
 
   async deleteFile(filePath: string): Promise<void> {
@@ -147,18 +148,18 @@ export class UploaderService {
   async batchDelete(paths: string[]): Promise<{ path: string; success: boolean; error?: string }[]> {
     this.logger.log(`Batch deleting ${paths.length} items`, LogContext.UPLOADER);
 
-    const results: { path: string; success: boolean; error?: string }[] = [];
-
-    for (const filePath of paths) {
-      try {
-        await this.deleteFile(filePath);
-        results.push({ path: filePath, success: true });
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '删除失败';
-        this.logger.error(`Failed to delete ${filePath}: ${errorMessage}`, undefined, LogContext.UPLOADER);
-        results.push({ path: filePath, success: false, error: errorMessage });
-      }
-    }
+    const results = await Promise.all(
+      paths.map(async (filePath) => {
+        try {
+          await this.deleteFile(filePath);
+          return { path: filePath, success: true };
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : '删除失败';
+          this.logger.error(`Failed to delete ${filePath}: ${errorMessage}`, undefined, LogContext.UPLOADER);
+          return { path: filePath, success: false, error: errorMessage };
+        }
+      }),
+    );
 
     return results;
   }
@@ -202,14 +203,24 @@ export class UploaderService {
     }
   }
 
-  async downloadFile(filePath: string, res: Response): Promise<void> {
-    this.logger.debug(`Downloading: ${filePath}`, LogContext.UPLOADER);
+  async downloadFile(filePath: string, res: Response, forceDownload = false): Promise<void> {
+    this.logger.debug(`Downloading: ${filePath}, forceDownload: ${forceDownload}`, LogContext.UPLOADER);
 
     const { fullPath, stats } = await this.getFilePathInfo(filePath);
 
     if (stats.isFile()) {
-      this.logger.log(`Downloading file: ${fullPath}`, LogContext.UPLOADER);
-      res.download(fullPath);
+      if (forceDownload) {
+        this.logger.log(`Force downloading file: ${fullPath}`, LogContext.UPLOADER);
+        // Express will set Content-Disposition: attachment automatically
+        res.download(fullPath);
+      } else {
+        this.logger.log(`Sending file inline for preview: ${fullPath}`, LogContext.UPLOADER);
+        // Ensure correct MIME type and inline disposition for browser preview
+        const filename = path.basename(fullPath);
+        res.type(fullPath);
+        res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(filename)}"`);
+        res.sendFile(fullPath);
+      }
     } else {
       await this.archiveService.createZipArchive(fullPath, res);
     }

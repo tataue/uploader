@@ -7,6 +7,7 @@ This file provides guidance to Verdent when working with code in this repository
 3. Key Rules & Constraints
 4. Development Hints
 
+
 ## Commands
 - `pnpm install` - Install all dependencies across monorepo
 - `pnpm run build` - Build all packages

@@ -8,6 +8,7 @@ interface FolderNodeProps {
   item: FileInfo;
   onDelete: (path: string) => void;
   onDownload: (path: string) => void;
+  onPreview: (path: string) => void;
   onNavigateToDir?: (path: string) => void;
   level: number;
   isSelected?: (path: string) => boolean;
@@ -19,6 +20,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   item,
   onDelete,
   onDownload,
+  onPreview,
   onNavigateToDir,
   level,
   isSelected,
@@ -115,6 +117,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
               item={child}
               onDelete={onDelete}
               onDownload={onDownload}
+              onPreview={onPreview}
               onNavigateToDir={onNavigateToDir}
               level={level + 1}
               isSelected={isSelected}

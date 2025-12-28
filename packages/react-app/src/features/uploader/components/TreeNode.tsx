@@ -8,6 +8,7 @@ interface TreeNodeProps {
   item: FileInfo;
   onDelete: (path: string) => void;
   onDownload: (path: string) => void;
+  onPreview: (path: string) => void;
   onNavigateToDir?: (path: string) => void;
   level: number;
   isSelected?: (path: string) => boolean;

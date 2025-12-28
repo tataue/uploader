@@ -7,6 +7,7 @@ interface DirectoryTreeProps {
   items: FileInfo[];
   onDelete: (path: string) => void;
   onDownload: (path: string) => void;
+  onPreview: (path: string) => void;
   onNavigateToDir?: (path: string) => void;
   isSelected?: (path: string) => boolean;
   getSelectionState?: (path: string) => SelectionState;
@@ -17,6 +18,7 @@ const DirectoryTree: React.FC<DirectoryTreeProps> = ({
   items,
   onDelete,
   onDownload,
+  onPreview,
   onNavigateToDir,
   isSelected,
   getSelectionState,
@@ -38,6 +40,7 @@ const DirectoryTree: React.FC<DirectoryTreeProps> = ({
           item={item}
           onDelete={onDelete}
           onDownload={onDownload}
+          onPreview={onPreview}
           onNavigateToDir={onNavigateToDir}
           level={0}
           isSelected={isSelected}

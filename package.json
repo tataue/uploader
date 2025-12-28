@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "install:all": "pnpm install",
+    "dev": "concurrently -k -n \"backend,frontend\" -c \"cyan,magenta\" \"pnpm --filter nestjs start:dev\" \"wait-on http://localhost:3001/uploader && pnpm --filter upload start\"",
     "build": "pnpm -r build",
     "start": "pnpm -r start",
     "lint": "pnpm run lint:backend && pnpm run lint:frontend",
@@ -13,7 +14,8 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "eslint": "^9.35.0",
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "wait-on": "^9.0.3"
   },
   "pnpm": {
     "overrides": {

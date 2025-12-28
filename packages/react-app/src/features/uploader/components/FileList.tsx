@@ -6,6 +6,7 @@ import BatchActionBar from './BatchActionBar';
 import { FileInfo } from '../types/FileInfo';
 import { findNodeByPath, filterTree } from '../utils/fileTreeUtils';
 import { useFileSelection } from '../hooks/useFileSelection';
+import { useFileActions } from '../hooks/useFileActions';
 
 interface FileListProps {
   files: FileInfo[];
@@ -36,58 +37,12 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
     isAllSelected,
   } = useFileSelection(filteredFiles, files);
 
-  const handleDelete = async (filePath: string): Promise<void> => {
-    try {
-      await onBatchDelete([filePath]);
-    } catch (error) {
-      console.error('删除失败:', error);
-      alert('删除失败，请稍后重试');
-    }
-  };
-
-  const handleDownload = (filePath: string): void => {
-    const link = document.createElement('a');
-    link.href = `./uploader/download/${encodeURIComponent(filePath)}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleBatchDelete = async (): Promise<void> => {
-    if (!confirm(`确定删除选中的 ${selectedCount} 项吗？`)) return;
-    try {
-      await onBatchDelete(selectedItems);
-      clearSelection();
-    } catch (error) {
-      console.error('批量删除失败:', error);
-      alert('批量删除失败，请稍后重试');
-    }
-  };
-
-  const handleBatchDownload = async (): Promise<void> => {
-    try {
-      const response = await fetch('./uploader/batch-download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paths: selectedItems }),
-      });
-      if (!response.ok) throw new Error('下载失败');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const disposition = response.headers.get('Content-Disposition');
-      const filename = disposition?.match(/filename="(.+)"/)?.[1] || 'batch-download.zip';
-      link.download = decodeURIComponent(filename);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('批量下载失败:', error);
-      alert('批量下载失败，请稍后重试');
-    }
-  };
+  const { handleDelete, handleDownload, handlePreview, handleBatchDelete, handleBatchDownload } = useFileActions({
+    selectedItems,
+    selectedCount,
+    onBatchDelete,
+    clearSelection,
+  });
 
   const handleNavigateToDir = (path: string): void => {
     onNavigateToDir?.(path);
@@ -132,6 +87,7 @@ export default function FileList({ files, onBatchDelete, currentPath = '', onNav
             items={filteredFiles}
             onDelete={handleDelete}
             onDownload={handleDownload}
+            onPreview={handlePreview}
             onNavigateToDir={handleNavigateToDir}
             isSelected={isSelected}
             getSelectionState={getSelectionState}

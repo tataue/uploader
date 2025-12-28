@@ -6,6 +6,7 @@ interface FileNodeProps {
   item: FileInfo;
   onDelete: (path: string) => void;
   onDownload: (path: string) => void;
+  onPreview: (path: string) => void;
   level: number;
   isSelected?: (path: string) => boolean;
   onToggleSelect?: (path: string) => void;
@@ -15,6 +16,7 @@ const FileNode: React.FC<FileNodeProps> = ({
   item,
   onDelete,
   onDownload,
+  onPreview,
   level,
   isSelected,
   onToggleSelect,
@@ -30,6 +32,11 @@ const FileNode: React.FC<FileNodeProps> = ({
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDownload(itemPath);
+  };
+
+  const handlePreview = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onPreview(itemPath);
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +67,11 @@ const FileNode: React.FC<FileNodeProps> = ({
         <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded bg-neutral-100 text-neutral-400">
           <File size={14} />
         </div>
-        <span className="flex-1 truncate group-hover:text-brand-600" title={item.name}>
+        <span
+          className="flex-1 truncate cursor-pointer transition-colors hover:text-brand-600 hover:underline"
+          title={item.name}
+          onClick={handlePreview}
+        >
           {item.name}
         </span>
         <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-500">

@@ -4,7 +4,6 @@ import {
   Get,
   Post,
   Delete,
-  Param,
   Body,
   Res,
   Req,
@@ -12,6 +11,8 @@ import {
   UseInterceptors,
   HttpException,
   HttpStatus,
+  ParseFilePipe,
+  MaxFileSizeValidator,
 } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
@@ -38,7 +39,14 @@ export class UploaderController {
   async uploadFile(
     @Req() req: Request,
     @Res() res: Response,
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 100 * 1024 * 1024 }),
+        ],
+        fileIsRequired: false,
+      }),
+    ) files: Express.Multer.File[],
   ): Promise<void> {
     try {
       this.logger.log(
@@ -69,11 +77,12 @@ export class UploaderController {
 
   @Delete(':filePath')
   async deleteFile(
-    @Param('filePath') filePathParam: string | string[],
+    @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
     try {
-      const filePath = this.pathSecurityService.normalizeFilePath(filePathParam);
+      const fullPath = decodeURIComponent(req.path.replace('/uploader/', ''));
+      const filePath = this.pathSecurityService.normalizeFilePath(fullPath);
       await this.uploaderService.deleteFile(filePath);
       res.json({ message: '删除成功' });
     } catch (error) {
@@ -110,14 +119,16 @@ export class UploaderController {
     }
   }
 
-  @Post('download/:filePath')
+  @Get('download/:filePath')
   async downloadFile(
-    @Param('filePath') filePathParam: string | string[],
+    @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
     try {
-      const filePath = this.pathSecurityService.normalizeFilePath(filePathParam);
-      await this.uploaderService.downloadFile(filePath, res);
+      const fullPath = decodeURIComponent(req.path.replace('/uploader/download/', ''));
+      const filePath = this.pathSecurityService.normalizeFilePath(fullPath);
+      const forceDownload = req.query.forceDownload === 'true';
+      await this.uploaderService.downloadFile(filePath, res, forceDownload);
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
